@@ -55,7 +55,8 @@ header::before {
   0%,100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-10px) rotate(2deg); }
 }
-.header-mascot svg { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); }
+.header-mascot img { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); width: 110px; height: 120px; object-fit: contain; }
+.char-mini { object-fit: contain; }
 .header-sparkle {
   position: absolute;
   top: -4px; right: -8px;
@@ -408,6 +409,57 @@ header p {
 .error-box { background: #fff0f0; border: 2px solid #ffcccc; border-radius: 14px; padding: 16px; color: #cc4444; font-size: 0.9rem; margin-top: 16px; line-height: 1.6; }
 
 /* ===== TOAST ===== */
+/* ===== API KEY ===== */
+.api-key-section {
+  margin-top: 18px;
+  border: 2px dashed #dce8f5;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.api-key-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-light);
+  cursor: pointer;
+  user-select: none;
+}
+.api-key-toggle:hover { color: var(--blue); }
+.api-key-body {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+.api-key-body input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 2px solid #dce8f5;
+  border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.82rem;
+  outline: none;
+  background: #f8fbff;
+  color: var(--text);
+}
+.api-key-body input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
+.api-key-save-btn {
+  padding: 9px 14px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Mochiy Pop One', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.api-key-save-btn:hover { background: var(--blue-dark); }
+.api-key-status { font-size: 0.75rem; margin-top: 6px; font-weight: 700; color: var(--green); }
+.api-key-status.not-set { color: var(--orange); }
+
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: white; padding: 12px 24px; border-radius: 50px; font-size: 0.9rem; font-weight: 500; transition: transform 0.3s; z-index: 100; white-space: nowrap; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
@@ -416,48 +468,7 @@ header p {
 
 <header>
   <div class="header-mascot">
-    <svg id="headerOwl" width="88" height="98" viewBox="0 0 88 98" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Body -->
-      <ellipse cx="44" cy="76" rx="27" ry="22" fill="#C8860A"/>
-      <!-- Tummy -->
-      <ellipse cx="44" cy="78" rx="18" ry="14" fill="#E8C07A"/>
-      <!-- Head -->
-      <circle cx="44" cy="37" r="29" fill="#C8860A"/>
-      <!-- Ear tufts -->
-      <polygon points="20,15 13,0 30,12" fill="#A06800"/>
-      <polygon points="68,15 75,0 58,12" fill="#A06800"/>
-      <!-- Face lighter area -->
-      <ellipse cx="44" cy="40" rx="20" ry="17" fill="#E8C07A"/>
-      <!-- Left eye white -->
-      <circle cx="32" cy="32" r="10" fill="white"/>
-      <!-- Right eye white -->
-      <circle cx="56" cy="32" r="10" fill="white"/>
-      <!-- Left eye iris -->
-      <circle cx="33" cy="32" r="7" fill="#2980B9"/>
-      <!-- Right eye iris -->
-      <circle cx="57" cy="32" r="7" fill="#2980B9"/>
-      <!-- Left pupil -->
-      <circle id="hLPupil" cx="34" cy="32" r="4" fill="#1a1a1a"/>
-      <!-- Right pupil -->
-      <circle id="hRPupil" cx="58" cy="32" r="4" fill="#1a1a1a"/>
-      <!-- Eye shines -->
-      <circle cx="36" cy="29" r="1.8" fill="white"/>
-      <circle cx="60" cy="29" r="1.8" fill="white"/>
-      <!-- Beak -->
-      <polygon points="44,42 40,49 48,49" fill="#E87010"/>
-      <!-- Cheeks -->
-      <circle cx="20" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
-      <circle cx="68" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
-      <!-- Wings -->
-      <ellipse cx="17" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(18 17 74)"/>
-      <ellipse cx="71" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(-18 71 74)"/>
-      <!-- Book -->
-      <rect x="22" y="87" width="44" height="11" rx="4" fill="#3498DB"/>
-      <rect x="22" y="87" width="22" height="11" fill="#2472A4"/>
-      <line x1="44" y1="87" x2="44" y2="98" stroke="white" stroke-width="2"/>
-      <!-- Star -->
-      <polygon points="44,3 45.8,8.5 51.5,8.5 47,12 49,17.5 44,14 39,17.5 41,12 36.5,8.5 42.2,8.5" fill="#FFD700"/>
-    </svg>
+    <img id="headerOwl" src="images/chara_start.png" alt="ホクリ" onerror="this.style.visibility='hidden'">
     <span class="header-sparkle">✨</span>
   </div>
   <h1>📚 読書感想文<br>かんたんサポート</h1>
@@ -484,32 +495,39 @@ header p {
 <div class="toast" id="toast">📋 コピーしました！</div>
 
 <script>
-/* ===== MASCOT SVG (reused in cards) ===== */
-const MINI_OWL = `<svg class="char-mini" viewBox="0 0 88 98" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="44" cy="76" rx="27" ry="22" fill="#C8860A"/>
-  <ellipse cx="44" cy="78" rx="18" ry="14" fill="#E8C07A"/>
-  <circle cx="44" cy="37" r="29" fill="#C8860A"/>
-  <polygon points="20,15 13,0 30,12" fill="#A06800"/>
-  <polygon points="68,15 75,0 58,12" fill="#A06800"/>
-  <ellipse cx="44" cy="40" rx="20" ry="17" fill="#E8C07A"/>
-  <circle cx="32" cy="32" r="10" fill="white"/>
-  <circle cx="56" cy="32" r="10" fill="white"/>
-  <circle cx="33" cy="32" r="7" fill="#2980B9"/>
-  <circle cx="57" cy="32" r="7" fill="#2980B9"/>
-  <circle class="owl-lpupil" cx="34" cy="32" r="4" fill="#1a1a1a"/>
-  <circle class="owl-rpupil" cx="58" cy="32" r="4" fill="#1a1a1a"/>
-  <circle cx="36" cy="29" r="1.8" fill="white"/>
-  <circle cx="60" cy="29" r="1.8" fill="white"/>
-  <polygon points="44,42 40,49 48,49" fill="#E87010"/>
-  <circle cx="20" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
-  <circle cx="68" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
-  <ellipse cx="17" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(18 17 74)"/>
-  <ellipse cx="71" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(-18 71 74)"/>
-  <rect x="22" y="87" width="44" height="11" rx="4" fill="#3498DB"/>
-  <rect x="22" y="87" width="22" height="11" fill="#2472A4"/>
-  <line x1="44" y1="87" x2="44" y2="98" stroke="white" stroke-width="2"/>
-  <polygon points="44,3 45.8,8.5 51.5,8.5 47,12 49,17.5 44,14 39,17.5 41,12 36.5,8.5 42.2,8.5" fill="#FFD700"/>
-</svg>`;
+/* ===== CHARACTER IMAGES ===== */
+function getCharImg(type) {
+  const src = { start:'images/chara_start.png', mid:'images/chara_mid.png', end:'images/chara_end.png' }[type] || 'images/chara_mid.png';
+  return `<img class="char-mini" src="${src}" alt="ホクリ" onerror="this.style.visibility='hidden'">`;
+}
+
+/* ===== API KEY ===== */
+const API_KEY_STORE = 'hokuri_api_key';
+function getApiKey() { return localStorage.getItem(API_KEY_STORE) || ''; }
+function saveApiKey(key) { localStorage.setItem(API_KEY_STORE, key); }
+function renderApiKeySection() {
+  const key = getApiKey();
+  const hasKey = key.length > 0;
+  const cat = gradeCat();
+  const label = cat === 'low' ? '🔑 APIキーをせっていする' : '🔑 APIキーを設定する';
+  const statusText = hasKey ? '✅ APIキーが設定されています' : (cat==='low' ? '⚠️ APIキーがせっていされていません' : '⚠️ APIキーが設定されていません');
+  return `<div class="api-key-section">
+    <div class="api-key-toggle" onclick="var b=document.getElementById('apiKeyBody');b.style.display=b.style.display==='none'?'flex':'none'">
+      ${label} ${hasKey ? '✅ ▾' : '⚠️ ▾'}
+    </div>
+    <div class="api-key-body" id="apiKeyBody" style="display:${hasKey?'none':'flex'}">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." value="">
+      <button class="api-key-save-btn" onclick="saveApiKeyFromInput()">${cat==='low'?'ほぞん':'保存'}</button>
+    </div>
+    <div class="api-key-status ${hasKey?'':'not-set'}">${statusText}</div>
+  </div>`;
+}
+function saveApiKeyFromInput() {
+  const inp = document.getElementById('apiKeyInput');
+  if (!inp || !inp.value.trim()) return;
+  saveApiKey(inp.value.trim());
+  renderStep();
+}
 
 /* ===== GRADE / VOICE STATE ===== */
 let currentStep = 0;
@@ -869,7 +887,7 @@ function renderInfoStep(step) {
   const card = document.getElementById('mainCard');
   card.innerHTML = `
     <div class="char-row">
-      ${MINI_OWL}
+      ${getCharImg('start')}
       <div class="bubble">
         ${msg}
         <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak, this)">🔊 もう一度きく</button>
@@ -894,6 +912,7 @@ function renderInfoStep(step) {
         ${['1年生','2年生','3年生','4年生','5年生','6年生'].map(g=>`<option value="${g}" ${grade===g?'selected':''}>${g}</option>`).join('')}
       </select>
     </div>
+    ${renderApiKeySection()}
     <div class="btn-row">
       <button class="btn btn-next" id="nextBtn" onclick="nextStep()" disabled>つぎへ →</button>
     </div>`;
@@ -946,7 +965,7 @@ function renderChoiceStep(step) {
   const card = document.getElementById('mainCard');
   card.innerHTML = `
     <div class="char-row">
-      ${MINI_OWL}
+      ${getCharImg('mid')}
       <div class="bubble">
         ${msg}
         <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak,this)">🔊 もう一度きく</button>
@@ -1027,7 +1046,7 @@ function renderLoading() {
   document.getElementById('stepsRow').innerHTML = STEP_EMOJIS.map(() => `<div class="step-dot done">✓</div>`).join('');
   document.getElementById('mainCard').innerHTML = `
     <div class="char-row">
-      ${MINI_OWL}
+      ${getCharImg('end')}
       <div class="bubble">
         ${gradeCat()==='low' ? 'かんそう文を つくっているよ！すこし待ってね！' : '感想文の下書きを作っています！少し待ってね！'}
       </div>
@@ -1048,6 +1067,14 @@ function answerText(qId) {
 }
 
 async function generateResult() {
+  if (!getApiKey()) {
+    document.getElementById('mainCard').innerHTML = `
+      <div class="char-row">${getCharImg('mid')}<div class="bubble">APIキーが設定されていないよ！もどって設定してね。</div></div>
+      <div class="result-header"><div class="result-emoji">⚠️</div><div class="result-title">APIキーが必要です</div></div>
+      <div class="error-box">最初のページに戻って、APIキーを入力・保存してから再度お試しください。</div>
+      <button class="btn-restart" onclick="restart()">🔄 最初からやり直す</button>`;
+    return;
+  }
   const cat = gradeCat();
   const gradeNum = parseInt(grade);
   const prompt = `あなたは小学生の読書感想文を優しくサポートする先生です。
@@ -1084,7 +1111,7 @@ ${gradeNum >= 5 ? '- 小学校5〜6年生らしい文章で書く' : ''}
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
         max_tokens: 1200,
@@ -1099,7 +1126,7 @@ ${gradeNum >= 5 ? '- 小学校5〜6年生らしい文章で書く' : ''}
     renderResult(parsed);
   } catch(e) {
     document.getElementById('mainCard').innerHTML = `
-      <div class="char-row">${MINI_OWL}<div class="bubble">あれ、うまくいかなかったみたい…もう一度やってみてね！</div></div>
+      <div class="char-row">${getCharImg('mid')}<div class="bubble">あれ、うまくいかなかったみたい…もう一度やってみてね！</div></div>
       <div class="result-header"><div class="result-emoji">😢</div><div class="result-title">エラーが発生しました</div></div>
       <div class="error-box">うまく生成できませんでした。<br>もう一度やり直してみてね。<br><small>${e.message}</small></div>
       <button class="btn-restart" onclick="restart()">🔄 最初からやり直す</button>`;
@@ -1118,7 +1145,7 @@ function renderResult(data) {
   const doneMsg = cat==='low' ? 'できたよ！コピーして つかってね！' : '下書きメモができたよ！コピーして使ってね！';
   document.getElementById('mainCard').innerHTML = `
     <div class="char-row">
-      ${MINI_OWL}
+      ${getCharImg('end')}
       <div class="bubble">
         ${doneMsg}
         <button class="bubble-voice" data-speak="${doneMsg}" onclick="toggleSpeak(this.dataset.speak,this)">🔊 もう一度きく</button>
