@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>読書感想文 かんたんサポート</title>
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky: #e0f4ff;
+  --blue: #4a90d9;
+  --blue-dark: #2c6fad;
+  --yellow: #ffd84d;
+  --orange: #ff8c42;
+  --green: #5cba7d;
+  --green-light: #e6f7ec;
+  --pink: #ff6b9d;
+  --purple: #9b59b6;
+  --text: #2d3a4a;
+  --text-light: #6b7c93;
+  --bg: #f0f9ff;
+  --radius: 20px;
+  --shadow: 0 4px 24px rgba(74,144,217,0.13);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 0 0 60px;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: linear-gradient(135deg, #4a90d9 0%, #5cba7d 100%);
+  padding: 20px 20px 38px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='3' fill='rgba(255,255,255,0.08)'/%3E%3Ccircle cx='40' cy='35' r='5' fill='rgba(255,255,255,0.06)'/%3E%3Ccircle cx='55' cy='8' r='2' fill='rgba(255,255,255,0.1)'/%3E%3C/svg%3E");
+}
+.header-mascot {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 6px;
+  animation: headerFloat 3s ease-in-out infinite;
+}
+@keyframes headerFloat {
+  0%,100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+.header-mascot svg { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); }
+.header-sparkle {
+  position: absolute;
+  top: -4px; right: -8px;
+  font-size: 1.2rem;
+  animation: sparkSpin 2s linear infinite;
+}
+@keyframes sparkSpin {
+  0% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(180deg) scale(1.4); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+header h1 {
+  font-family: 'Mochiy Pop One', sans-serif;
+  font-size: 1.65rem;
+  color: white;
+  position: relative;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  line-height: 1.4;
+}
+header p {
+  color: rgba(255,255,255,0.92);
+  margin-top: 6px;
+  font-size: 0.85rem;
+  position: relative;
+}
+
+/* ===== PROGRESS ===== */
+.progress-wrap {
+  max-width: 600px;
+  margin: -16px auto 0;
+  padding: 0 20px;
+  position: relative;
+  z-index: 10;
+}
+.progress-bar-bg {
+  background: white;
+  border-radius: 50px;
+  height: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--yellow), var(--orange));
+  border-radius: 50px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.67rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+.steps-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 20px 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.step-dot {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 3px solid #e0eaf5;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+.step-dot.active { border-color: var(--yellow); background: var(--yellow); box-shadow: 0 0 0 4px rgba(255,216,77,0.3); transform: scale(1.15); }
+.step-dot.done { border-color: var(--green); background: var(--green); color: white; font-size: 0.85rem; }
+
+/* ===== CARD ===== */
+.main { max-width: 600px; margin: 22px auto 0; padding: 0 16px; }
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 20px 24px;
+  animation: slideUp 0.4s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== MASCOT + BUBBLE ===== */
+.char-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.char-mini {
+  width: 68px;
+  height: 76px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,0.15));
+  animation: miniFloat 2.5s ease-in-out infinite;
+}
+@keyframes miniFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.bubble {
+  background: white;
+  border: 2.5px solid var(--blue);
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 13px;
+  flex: 1;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--text);
+  box-shadow: 0 2px 10px rgba(74,144,217,0.1);
+}
+.bubble-voice {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--sky);
+  border: none;
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 0.72rem;
+  color: var(--blue-dark);
+  cursor: pointer;
+  margin-top: 6px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.bubble-voice:hover { background: var(--blue); color: white; }
+.bubble-voice.speaking { background: var(--orange); color: white; animation: pulse 0.4s ease infinite alternate; }
+@keyframes pulse { to { opacity: 0.7; } }
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--sky);
+  color: var(--blue-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 50px;
+  margin-bottom: 14px;
+}
+.card h2 {
+  font-family: 'Mochiy Pop One', sans-serif;
+  font-size: 1.15rem;
+  color: var(--text);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* ===== SIMPLE FIELDS ===== */
+.simple-field { margin-bottom: 18px; }
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 7px;
+}
+.field-voice {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  color: var(--blue);
+  padding: 0;
+  transition: transform 0.2s;
+  margin-left: auto;
+}
+.field-voice:hover { transform: scale(1.2); }
+.field-voice.speaking { animation: wiggle 0.3s ease infinite alternate; }
+@keyframes wiggle { to { transform: scale(1.25) rotate(15deg); } }
+.simple-field input[type="text"],
+.simple-field select {
+  width: 100%;
+  padding: 13px 15px;
+  border: 2px solid #dce8f5;
+  border-radius: 13px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: #f8fbff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.simple-field input:focus, .simple-field select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(74,144,217,0.12);
+  background: white;
+}
+.simple-field select { cursor: pointer; }
+
+/* ===== CHOICE GROUPS ===== */
+.choice-group {
+  background: #f8fbff;
+  border: 1.5px solid #e4eef8;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.choice-group:last-of-type { margin-bottom: 0; }
+.q-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.q-num {
+  background: var(--blue);
+  color: white;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.q-text {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #4a6a8a;
+  line-height: 1.4;
+}
+.q-voice {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  color: var(--blue);
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.q-voice:hover { transform: scale(1.2); }
+.q-voice.speaking { animation: wiggle 0.3s ease infinite alternate; }
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 2px solid #dce8f5;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.875rem;
+  user-select: none;
+}
+.opt:hover { border-color: var(--blue); background: #eef6ff; }
+.opt.selected { border-color: var(--blue); background: var(--sky); }
+.opt-radio {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid #c0d8f0;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.opt.selected .opt-radio { border-color: var(--blue); background: var(--blue); }
+.opt-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: white;
+  display: none;
+}
+.opt.selected .opt-dot { display: block; }
+.opt-emoji { font-size: 1.1rem; flex-shrink: 0; }
+.opt-label { flex: 1; }
+
+.other-input {
+  margin-top: 8px;
+  padding: 10px 13px;
+  width: 100%;
+  border: 2px solid var(--blue);
+  border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  background: white;
+  color: var(--text);
+  display: none;
+}
+.other-input.show { display: block; }
+.other-input:focus { box-shadow: 0 0 0 3px rgba(74,144,217,0.15); }
+
+/* ===== BUTTONS ===== */
+.btn-row { display: flex; gap: 10px; margin-top: 22px; }
+.btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Mochiy Pop One', sans-serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-back { background: #f0f4f8; color: var(--text-light); flex: 0 0 auto; padding: 14px 18px; }
+.btn-back:hover { background: #e0e8f0; }
+.btn-next { background: linear-gradient(135deg, var(--blue), #36b3f0); color: white; box-shadow: 0 4px 16px rgba(74,144,217,0.35); }
+.btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74,144,217,0.45); }
+.btn-next:active { transform: translateY(0); }
+.btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ===== LOADING ===== */
+.loading-wrap { text-align: center; padding: 40px 20px; }
+.spinner { width: 56px; height: 56px; border: 5px solid #e0eaf5; border-top-color: var(--blue); border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 20px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-wrap p { font-family: 'Mochiy Pop One', sans-serif; color: var(--blue); font-size: 1rem; }
+.loading-dots::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+@keyframes dots { 0% { content: ''; } 25% { content: '・'; } 50% { content: '・・'; } 75% { content: '・・・'; } }
+
+/* ===== RESULT ===== */
+.result-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.result-emoji { font-size: 2.5rem; animation: bounce 0.6s ease; }
+@keyframes bounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+.result-title { font-family: 'Mochiy Pop One', sans-serif; font-size: 1.3rem; }
+.section-block { background: #f8fbff; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; border-left: 4px solid var(--blue); animation: slideUp 0.4s ease both; }
+.section-block:nth-child(2) { border-left-color: var(--green); animation-delay: 0.1s; }
+.section-block:nth-child(3) { border-left-color: var(--orange); animation-delay: 0.2s; }
+.section-block:nth-child(4) { border-left-color: var(--pink); animation-delay: 0.3s; }
+.section-label { font-family: 'Mochiy Pop One', sans-serif; font-size: 0.78rem; color: var(--text-light); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+.section-content { font-size: 0.93rem; line-height: 1.85; color: var(--text); white-space: pre-wrap; }
+.btn-copy { width: 100%; margin-top: 10px; padding: 14px; background: linear-gradient(135deg, var(--green), #3da862); color: white; border: none; border-radius: 14px; font-family: 'Mochiy Pop One', sans-serif; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 16px rgba(92,186,125,0.35); transition: all 0.2s; }
+.btn-copy:hover { transform: translateY(-2px); }
+.btn-restart { width: 100%; margin-top: 10px; padding: 12px; background: #f0f4f8; color: var(--text-light); border: none; border-radius: 14px; font-family: 'Mochiy Pop One', sans-serif; font-size: 0.9rem; cursor: pointer; }
+.btn-restart:hover { background: #e0e8f0; }
+.error-box { background: #fff0f0; border: 2px solid #ffcccc; border-radius: 14px; padding: 16px; color: #cc4444; font-size: 0.9rem; margin-top: 16px; line-height: 1.6; }
+
+/* ===== TOAST ===== */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: white; padding: 12px 24px; border-radius: 50px; font-size: 0.9rem; font-weight: 500; transition: transform 0.3s; z-index: 100; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-mascot">
+    <svg id="headerOwl" width="88" height="98" viewBox="0 0 88 98" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Body -->
+      <ellipse cx="44" cy="76" rx="27" ry="22" fill="#C8860A"/>
+      <!-- Tummy -->
+      <ellipse cx="44" cy="78" rx="18" ry="14" fill="#E8C07A"/>
+      <!-- Head -->
+      <circle cx="44" cy="37" r="29" fill="#C8860A"/>
+      <!-- Ear tufts -->
+      <polygon points="20,15 13,0 30,12" fill="#A06800"/>
+      <polygon points="68,15 75,0 58,12" fill="#A06800"/>
+      <!-- Face lighter area -->
+      <ellipse cx="44" cy="40" rx="20" ry="17" fill="#E8C07A"/>
+      <!-- Left eye white -->
+      <circle cx="32" cy="32" r="10" fill="white"/>
+      <!-- Right eye white -->
+      <circle cx="56" cy="32" r="10" fill="white"/>
+      <!-- Left eye iris -->
+      <circle cx="33" cy="32" r="7" fill="#2980B9"/>
+      <!-- Right eye iris -->
+      <circle cx="57" cy="32" r="7" fill="#2980B9"/>
+      <!-- Left pupil -->
+      <circle id="hLPupil" cx="34" cy="32" r="4" fill="#1a1a1a"/>
+      <!-- Right pupil -->
+      <circle id="hRPupil" cx="58" cy="32" r="4" fill="#1a1a1a"/>
+      <!-- Eye shines -->
+      <circle cx="36" cy="29" r="1.8" fill="white"/>
+      <circle cx="60" cy="29" r="1.8" fill="white"/>
+      <!-- Beak -->
+      <polygon points="44,42 40,49 48,49" fill="#E87010"/>
+      <!-- Cheeks -->
+      <circle cx="20" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
+      <circle cx="68" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
+      <!-- Wings -->
+      <ellipse cx="17" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(18 17 74)"/>
+      <ellipse cx="71" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(-18 71 74)"/>
+      <!-- Book -->
+      <rect x="22" y="87" width="44" height="11" rx="4" fill="#3498DB"/>
+      <rect x="22" y="87" width="22" height="11" fill="#2472A4"/>
+      <line x1="44" y1="87" x2="44" y2="98" stroke="white" stroke-width="2"/>
+      <!-- Star -->
+      <polygon points="44,3 45.8,8.5 51.5,8.5 47,12 49,17.5 44,14 39,17.5 41,12 36.5,8.5 42.2,8.5" fill="#FFD700"/>
+    </svg>
+    <span class="header-sparkle">✨</span>
+  </div>
+  <h1>📚 読書感想文<br>かんたんサポート</h1>
+  <p id="headerSub">しつもんにこたえるだけで かんそう文の下書きができるよ！</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="progress-labels">
+    <span>スタート</span>
+    <span>本の情報</span>
+    <span>お話</span>
+    <span>場面</span>
+    <span>これから</span>
+    <span>理由</span>
+    <span>完成！</span>
+  </div>
+</div>
+
+<div class="steps-row" id="stepsRow"></div>
+<div class="main"><div class="card" id="mainCard"></div></div>
+<div class="toast" id="toast">📋 コピーしました！</div>
+
+<script>
+/* ===== MASCOT SVG (reused in cards) ===== */
+const MINI_OWL = `<svg class="char-mini" viewBox="0 0 88 98" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="44" cy="76" rx="27" ry="22" fill="#C8860A"/>
+  <ellipse cx="44" cy="78" rx="18" ry="14" fill="#E8C07A"/>
+  <circle cx="44" cy="37" r="29" fill="#C8860A"/>
+  <polygon points="20,15 13,0 30,12" fill="#A06800"/>
+  <polygon points="68,15 75,0 58,12" fill="#A06800"/>
+  <ellipse cx="44" cy="40" rx="20" ry="17" fill="#E8C07A"/>
+  <circle cx="32" cy="32" r="10" fill="white"/>
+  <circle cx="56" cy="32" r="10" fill="white"/>
+  <circle cx="33" cy="32" r="7" fill="#2980B9"/>
+  <circle cx="57" cy="32" r="7" fill="#2980B9"/>
+  <circle class="owl-lpupil" cx="34" cy="32" r="4" fill="#1a1a1a"/>
+  <circle class="owl-rpupil" cx="58" cy="32" r="4" fill="#1a1a1a"/>
+  <circle cx="36" cy="29" r="1.8" fill="white"/>
+  <circle cx="60" cy="29" r="1.8" fill="white"/>
+  <polygon points="44,42 40,49 48,49" fill="#E87010"/>
+  <circle cx="20" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
+  <circle cx="68" cy="44" r="8" fill="rgba(240,80,60,0.35)"/>
+  <ellipse cx="17" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(18 17 74)"/>
+  <ellipse cx="71" cy="74" rx="11" ry="17" fill="#A06800" transform="rotate(-18 71 74)"/>
+  <rect x="22" y="87" width="44" height="11" rx="4" fill="#3498DB"/>
+  <rect x="22" y="87" width="22" height="11" fill="#2472A4"/>
+  <line x1="44" y1="87" x2="44" y2="98" stroke="white" stroke-width="2"/>
+  <polygon points="44,3 45.8,8.5 51.5,8.5 47,12 49,17.5 44,14 39,17.5 41,12 36.5,8.5 42.2,8.5" fill="#FFD700"/>
+</svg>`;
+
+/* ===== GRADE / VOICE STATE ===== */
+let currentStep = 0;
+let answers = {};
+let grade = '3年生';
+let isSpeaking = false;
+
+function gradeCat() {
+  const g = parseInt(grade);
+  if (g <= 2) return 'low';
+  if (g <= 4) return 'mid';
+  return 'high';
+}
+function t(obj) {
+  if (!obj || typeof obj === 'string') return obj || '';
+  return obj[gradeCat()] || obj.mid || '';
+}
+
+/* ===== VOICE ===== */
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  stopSpeak();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP'; u.rate = 0.88; u.pitch = 1.08; u.volume = 1;
+  u.onstart = () => {
+    isSpeaking = true;
+    document.querySelectorAll('.bubble-voice, .q-voice, .field-voice').forEach(b => {
+      if (b.dataset.speak === text) b.classList.add('speaking');
+    });
+  };
+  u.onend = u.onerror = () => {
+    isSpeaking = false;
+    document.querySelectorAll('.speaking').forEach(b => b.classList.remove('speaking'));
+  };
+  window.speechSynthesis.speak(u);
+}
+function stopSpeak() {
+  if (window.speechSynthesis) { window.speechSynthesis.cancel(); isSpeaking = false; }
+  document.querySelectorAll('.speaking').forEach(b => b.classList.remove('speaking'));
+}
+function toggleSpeak(text, el) {
+  if (el.classList.contains('speaking')) { stopSpeak(); } else { speak(text); }
+}
+
+/* ===== STEP DATA ===== */
+const STEPS = [
+  {
+    type: 'info',
+    emoji: '📖',
+    badge: 'ステップ 1 / 5',
+    title: { low: 'どんな本をよんだの？', mid: 'どんな本を読んだの？', high: 'どんな本を読んだの？' },
+    mascotMsg: { low: 'よんだ本のなまえと、何年生かを教えてね！', mid: '読んだ本のタイトルと学年を教えてね！', high: '読んだ本のタイトルと学年を教えてね！' },
+  },
+  {
+    type: 'choices',
+    emoji: '📚',
+    badge: 'ステップ 2 / 5',
+    title: { low: 'どんなお話だった？', mid: 'どんなお話だった？', high: 'どんなお話だったか教えよう' },
+    mascotMsg: { low: '３つのしつもんに えらぶだけでこたえてね！', mid: '3つの質問に 選ぶだけで答えてね！', high: '3つの質問に答えてね！選ぶだけでOK！' },
+    questions: [
+      {
+        id: 'genre', emoji: '📖',
+        text: { low: 'どんなしゅるいのお話だった？', mid: 'どんな種類のお話だった？', high: 'どんなジャンルのお話だった？' },
+        voice: { low: 'どんなしゅるいのお話か、えらんでね', mid: 'どんな種類のお話か選んでね', high: 'どんなジャンルのお話か選んでね' },
+        options: {
+          low: [
+            {label:'ともだちや仲間のお話',emoji:'👫'},
+            {label:'かぞくのお話',emoji:'👨‍👩‍👧'},
+            {label:'ぼうけんのお話',emoji:'⚔️'},
+            {label:'どうぶつが出てくるお話',emoji:'🐾'},
+            {label:'ふしぎなことが起きるお話',emoji:'✨'},
+          ],
+          mid: [
+            {label:'友だちや仲間のお話',emoji:'👫'},
+            {label:'家族のお話',emoji:'👨‍👩‍👧'},
+            {label:'冒険のお話',emoji:'⚔️'},
+            {label:'動物が出てくるお話',emoji:'🐾'},
+            {label:'不思議な出来事のお話',emoji:'✨'},
+          ],
+          high: [
+            {label:'友情・仲間のお話',emoji:'👫'},
+            {label:'家族のお話',emoji:'👨‍👩‍👧'},
+            {label:'冒険・旅のお話',emoji:'⚔️'},
+            {label:'動物・自然のお話',emoji:'🐾'},
+            {label:'不思議・ファンタジーのお話',emoji:'✨'},
+          ],
+        }
+      },
+      {
+        id: 'mainChar', emoji: '🧒',
+        text: { low: 'お話の中でいちばんたいせつな子は？', mid: '主人公はどんな子？', high: '主人公はどのような人物？' },
+        voice: { low: 'お話のなかでいちばんたいせつな子はどんな子か、えらんでね', mid: '主人公はどんな子か選んでね', high: '主人公はどのような人物か選んでね' },
+        options: {
+          low: [
+            {label:'げんきで明るい子',emoji:'😄'},
+            {label:'やさしくておとなしい子',emoji:'😊'},
+            {label:'がんばりやの子',emoji:'💪'},
+            {label:'かわった子',emoji:'🌀'},
+            {label:'どうぶつや生き物',emoji:'🐻'},
+          ],
+          mid: [
+            {label:'元気で明るい子',emoji:'😄'},
+            {label:'やさしくておとなしい子',emoji:'😊'},
+            {label:'頑張り屋の子',emoji:'💪'},
+            {label:'個性的な子',emoji:'🌀'},
+            {label:'動物・生き物',emoji:'🐻'},
+          ],
+          high: [
+            {label:'活発・前向きな主人公',emoji:'😄'},
+            {label:'穏やかで思いやりのある主人公',emoji:'😊'},
+            {label:'努力家の主人公',emoji:'💪'},
+            {label:'個性的・ユニークな主人公',emoji:'🌀'},
+            {label:'動物・非人間の主人公',emoji:'🐻'},
+          ],
+        }
+      },
+      {
+        id: 'ending', emoji: '🎬',
+        text: { low: 'おわりはどうなった？', mid: '物語の終わりはどうなった？', high: '物語の結末はどうだった？' },
+        voice: { low: 'お話のおわりはどうなったか えらんでね', mid: '物語の終わりはどうなったか選んでね', high: '物語の結末はどうだったか選んでね' },
+        options: {
+          low: [
+            {label:'よかった！ハッピーエンドだった',emoji:'😊'},
+            {label:'かなしい終わりだった',emoji:'😢'},
+            {label:'よく分からない終わりだった',emoji:'🤔'},
+            {label:'まだとちゅうまでしかよんでいない',emoji:'📖'},
+          ],
+          mid: [
+            {label:'ハッピーエンドだった',emoji:'😊'},
+            {label:'悲しい終わりだった',emoji:'😢'},
+            {label:'どちらともいえない終わり方',emoji:'🤔'},
+            {label:'まだ途中まで読んだ',emoji:'📖'},
+          ],
+          high: [
+            {label:'ハッピーエンドだった',emoji:'😊'},
+            {label:'悲劇的な結末だった',emoji:'😢'},
+            {label:'余韻のある終わり方だった',emoji:'🌅'},
+            {label:'途中まで読んだ段階',emoji:'📖'},
+          ],
+        }
+      },
+    ]
+  },
+  {
+    type: 'choices',
+    emoji: '💬',
+    badge: 'ステップ 3 / 5',
+    title: { low: '一番こころに残った場面は？', mid: '一番心に残った場面は？', high: '最も印象に残った場面は？' },
+    mascotMsg: { low: 'どんな場面でどんなきもちになったか教えてね！', mid: 'どんな場面でどんな気持ちになったか教えてね！', high: 'どの場面が最も印象に残ったか教えてね！' },
+    questions: [
+      {
+        id: 'sceneWhen', emoji: '📍',
+        text: { low: 'どのあたりの場面だった？', mid: 'どのあたりの場面だった？', high: 'どのあたりの場面が印象的だった？' },
+        voice: { low: 'どのあたりの場面だったか えらんでね', mid: 'どのあたりの場面だったか選んでね', high: 'どのあたりの場面が印象的だったか選んでね' },
+        options: {
+          low: [
+            {label:'はじめの方',emoji:'🔜'},
+            {label:'まんなかあたり',emoji:'↔️'},
+            {label:'おわりの方',emoji:'🔚'},
+            {label:'ぜんぶ！',emoji:'🌟'},
+          ],
+          mid: [
+            {label:'始めの方',emoji:'🔜'},
+            {label:'真ん中あたり',emoji:'↔️'},
+            {label:'終わりの方',emoji:'🔚'},
+            {label:'全体的に印象的',emoji:'🌟'},
+          ],
+          high: [
+            {label:'冒頭の場面',emoji:'🔜'},
+            {label:'中盤の場面',emoji:'↔️'},
+            {label:'終盤・クライマックスの場面',emoji:'🔚'},
+            {label:'全体的に印象的だった',emoji:'🌟'},
+          ],
+        }
+      },
+      {
+        id: 'sceneFeel', emoji: '💖',
+        text: { low: 'その場面でどんなきもちになった？', mid: 'その場面でどんな気持ちになった？', high: 'その場面でどのような感情を抱いた？' },
+        voice: { low: 'その場面でどんなきもちになったか えらんでね', mid: 'その場面でどんな気持ちになったか選んでね', high: 'その場面でどのような感情を抱いたか選んでね' },
+        options: {
+          low: [
+            {label:'かなしかった・なきそうになった',emoji:'😢'},
+            {label:'うれしかった・あたたかいきもちになった',emoji:'🥰'},
+            {label:'びっくりした・ドキドキした',emoji:'😮'},
+            {label:'思わず笑った',emoji:'😄'},
+            {label:'もやもや・くやしいきもちになった',emoji:'😤'},
+          ],
+          mid: [
+            {label:'悲しかった・泣きそうになった',emoji:'😢'},
+            {label:'うれしかった・温かい気持ちになった',emoji:'🥰'},
+            {label:'びっくりした・ドキドキした',emoji:'😮'},
+            {label:'思わず笑ってしまった',emoji:'😄'},
+            {label:'くやしい・もどかしい気持ちになった',emoji:'😤'},
+          ],
+          high: [
+            {label:'悲しみ・涙を感じた',emoji:'😢'},
+            {label:'喜び・温かさを感じた',emoji:'🥰'},
+            {label:'驚き・ドキドキした',emoji:'😮'},
+            {label:'ユーモアを感じた',emoji:'😄'},
+            {label:'くやしさ・もどかしさを感じた',emoji:'😤'},
+          ],
+        }
+      },
+      {
+        id: 'similarExp', emoji: '🪞',
+        text: { low: '自分にも似たようなけいけんがある？', mid: '自分にも似た経験がある？', high: '自身の経験と重なる部分はあった？' },
+        voice: { low: '自分にも似たようなけいけんがあるか えらんでね', mid: '自分にも似た経験があるか選んでね', high: '自身の経験と重なる部分はあったか選んでね' },
+        options: {
+          low: [
+            {label:'ある！（どんなことか書いてね）',emoji:'✍️', showInput:true},
+            {label:'ない',emoji:'🙅'},
+            {label:'ちょっと似てるかも（書いてね）',emoji:'🤏', showInput:true},
+          ],
+          mid: [
+            {label:'ある！（どんな経験か書いてね）',emoji:'✍️', showInput:true},
+            {label:'ない',emoji:'🙅'},
+            {label:'ちょっと似ているかも（書いてね）',emoji:'🤏', showInput:true},
+          ],
+          high: [
+            {label:'ある（具体的に記述してね）',emoji:'✍️', showInput:true},
+            {label:'ない',emoji:'🙅'},
+            {label:'少し重なる部分がある（書いてね）',emoji:'🤏', showInput:true},
+          ],
+        },
+        otherInputLabel: { low: 'どんなけいけん？（みじかくでいいよ）', mid: 'どんな経験か書いてね（短くでOK）', high: 'どのような経験か書いてね' }
+      },
+    ]
+  },
+  {
+    type: 'choices',
+    emoji: '🌱',
+    badge: 'ステップ 4 / 5',
+    title: { low: 'これからどうしたい？', mid: 'これからどうしたい？', high: 'この本を読んでどう変わった？' },
+    mascotMsg: { low: 'この本を読んで思ったことを教えてね！', mid: 'この本を読んで思ったことを教えてね！', high: 'この本を読んで何を感じ、何を変えたいと思った？' },
+    questions: [
+      {
+        id: 'future', emoji: '🌟',
+        text: { low: 'この本を読んで、どうしたい？', mid: 'この本を読んで、これからどうしたい？', high: 'この本から得た学び・変えたいことは？' },
+        voice: { low: 'この本を読んで、これからどうしたいか えらんでね', mid: 'この本を読んで、これからどうしたいか選んでね', high: 'この本から得た学び、変えたいことを選んでね' },
+        options: {
+          low: [
+            {label:'ともだちや家族にやさしくしたい',emoji:'🤝'},
+            {label:'なにかに挑戦してみたい',emoji:'🚀'},
+            {label:'ものの見方が変わった',emoji:'👁️'},
+            {label:'感謝を伝えたい',emoji:'💌'},
+            {label:'とくになし',emoji:'😐'},
+          ],
+          mid: [
+            {label:'友だち・家族にもっと優しくしたい',emoji:'🤝'},
+            {label:'何かに挑戦してみたい',emoji:'🚀'},
+            {label:'物の見方・考え方が変わった',emoji:'👁️'},
+            {label:'感謝を伝えることを大切にしたい',emoji:'💌'},
+            {label:'特になし',emoji:'😐'},
+          ],
+          high: [
+            {label:'思いやりを大切にしたい',emoji:'🤝'},
+            {label:'新たなことに挑戦したい',emoji:'🚀'},
+            {label:'物の見方・価値観が変わった',emoji:'👁️'},
+            {label:'感謝や気持ちを伝えることを大切にしたい',emoji:'💌'},
+            {label:'特に変化なし',emoji:'😐'},
+          ],
+        }
+      },
+      {
+        id: 'recommend', emoji: '💌',
+        text: { low: 'この本をすすめたい人は？', mid: 'この本をすすめたい人は？', high: 'この本を誰にすすめる？' },
+        voice: { low: 'この本をすすめたい人を えらんでね', mid: 'この本をすすめたい人を選んでね', high: 'この本をすすめる相手を選んでね' },
+        options: {
+          low: [
+            {label:'ともだちにすすめたい',emoji:'👫'},
+            {label:'かぞくにすすめたい',emoji:'👨‍👩‍👧'},
+            {label:'おなじなやみをもつ人にすすめたい',emoji:'🤝'},
+            {label:'あんまりすすめない',emoji:'🤷'},
+          ],
+          mid: [
+            {label:'友だちにすすめたい',emoji:'👫'},
+            {label:'家族にすすめたい',emoji:'👨‍👩‍👧'},
+            {label:'同じ悩みを持つ人にすすめたい',emoji:'🤝'},
+            {label:'あんまりすすめない',emoji:'🤷'},
+          ],
+          high: [
+            {label:'友人・クラスメートにすすめたい',emoji:'👫'},
+            {label:'家族にすすめたい',emoji:'👨‍👩‍👧'},
+            {label:'同じ悩みを持つ人にすすめたい',emoji:'🤝'},
+            {label:'あまりすすめない',emoji:'🤷'},
+          ],
+        }
+      },
+    ]
+  },
+  {
+    type: 'choices',
+    emoji: '🤔',
+    badge: 'ステップ 5 / 5',
+    title: { low: 'なぜこの本をえらんだの？', mid: 'なぜこの本を選んだの？', high: 'なぜこの本を選んだ？' },
+    mascotMsg: { low: 'さいごのしつもんだよ！もうすこし！', mid: '最後の質問だよ！もう少し！', high: '最後の質問！あと少し！' },
+    questions: [
+      {
+        id: 'reason', emoji: '🔍',
+        text: { low: 'この本をえらんだわけは？', mid: 'この本を選んだ理由は？', high: 'この本を選んだ動機は？' },
+        voice: { low: 'この本をえらんだわけを えらんでね', mid: 'この本を選んだ理由を選んでね', high: 'この本を選んだ動機を選んでね' },
+        options: {
+          low: [
+            {label:'表紙が気になった',emoji:'🖼️'},
+            {label:'タイトルがおもしろそうだった',emoji:'💡'},
+            {label:'先生・家族・ともだちにすすめられた',emoji:'👋'},
+            {label:'じゅぎょうに出てきた',emoji:'🏫'},
+            {label:'ずっと気になっていた',emoji:'🌙'},
+          ],
+          mid: [
+            {label:'表紙が気になった',emoji:'🖼️'},
+            {label:'タイトルが面白そうだった',emoji:'💡'},
+            {label:'先生・家族・友だちにすすめられた',emoji:'👋'},
+            {label:'授業に出てきた',emoji:'🏫'},
+            {label:'ずっと気になっていた',emoji:'🌙'},
+          ],
+          high: [
+            {label:'表紙・デザインに引き付けられた',emoji:'🖼️'},
+            {label:'タイトルに興味を持った',emoji:'💡'},
+            {label:'先生・家族・友人にすすめられた',emoji:'👋'},
+            {label:'授業・学校のきっかけで知った',emoji:'🏫'},
+            {label:'以前から気になっていた',emoji:'🌙'},
+          ],
+        }
+      },
+    ]
+  },
+];
+
+const STEP_EMOJIS = ['📖','📚','💬','🌱','🤔','🎉'];
+
+/* ===== PROGRESS ===== */
+function updateProgress() {
+  const pct = (currentStep / STEPS.length) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  const row = document.getElementById('stepsRow');
+  row.innerHTML = '';
+  STEP_EMOJIS.forEach((e, i) => {
+    const d = document.createElement('div');
+    d.className = 'step-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
+    d.textContent = i < currentStep ? '✓' : e;
+    row.appendChild(d);
+  });
+}
+
+/* ===== RENDER STEP ===== */
+function renderStep() {
+  updateProgress();
+  if (currentStep >= STEPS.length) { renderLoading(); generateResult(); return; }
+  const step = STEPS[currentStep];
+  if (step.type === 'info') renderInfoStep(step);
+  else renderChoiceStep(step);
+}
+
+function renderInfoStep(step) {
+  const msg = t(step.mascotMsg);
+  const card = document.getElementById('mainCard');
+  card.innerHTML = `
+    <div class="char-row">
+      ${MINI_OWL}
+      <div class="bubble">
+        ${msg}
+        <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak, this)">🔊 もう一度きく</button>
+      </div>
+    </div>
+    <div class="step-badge">${step.emoji} ${step.badge}</div>
+    <h2>${t(step.title)}</h2>
+    <div class="simple-field">
+      <label class="field-label">
+        📚 本のタイトル
+        <button class="field-voice" data-speak="本のタイトルを入力してね" onclick="toggleSpeak('本のタイトルを入力してね',this)">🔊</button>
+      </label>
+      <input type="text" id="field_title" placeholder="${gradeCat()==='low' ? '例：ごんぎつね、くまのプーさん…' : '例：ごんぎつね、注文の多い料理店…'}"
+        value="${answers.title||''}" oninput="validateInfo()">
+    </div>
+    <div class="simple-field">
+      <label class="field-label">
+        🎒 学年
+        <button class="field-voice" data-speak="学年を選んでね" onclick="toggleSpeak('学年を選んでね',this)">🔊</button>
+      </label>
+      <select id="field_grade" onchange="grade=this.value;answers.grade=this.value;validateInfo()">
+        ${['1年生','2年生','3年生','4年生','5年生','6年生'].map(g=>`<option value="${g}" ${grade===g?'selected':''}>${g}</option>`).join('')}
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-next" id="nextBtn" onclick="nextStep()" disabled>つぎへ →</button>
+    </div>`;
+  validateInfo();
+  // auto speak welcome
+  setTimeout(() => speak(msg), 500);
+}
+
+function validateInfo() {
+  const t = document.getElementById('field_title');
+  const btn = document.getElementById('nextBtn');
+  if (btn) btn.disabled = !t || t.value.trim() === '';
+}
+
+function renderChoiceStep(step) {
+  const msg = t(step.mascotMsg);
+  const cat = gradeCat();
+  let questionsHTML = step.questions.map((q, qi) => {
+    const opts = q.options[cat] || q.options.mid;
+    const cur = answers[q.id] || {};
+    return `
+      <div class="choice-group">
+        <div class="q-header">
+          <span class="q-num">${qi+1}</span>
+          <span class="q-text">${q.emoji} ${t(q.text)}</span>
+          <button class="q-voice" data-speak="${t(q.voice).replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak,this)">🔊</button>
+        </div>
+        <div class="options-list" id="opts_${q.id}">
+          ${opts.map((o,oi) => {
+            const selClass = cur.label === o.label ? ' selected' : '';
+            return `<label class="opt${selClass}" onclick="selectOpt('${q.id}',${oi},'${o.label.replace(/'/g,'\\\'')}'${o.showInput?',true':''})">
+              <div class="opt-radio"><div class="opt-dot"></div></div>
+              <span class="opt-emoji">${o.emoji||''}</span>
+              <span class="opt-label">${o.label}</span>
+            </label>`;
+          }).join('')}
+          <label class="opt${cur.label==='その他'?' selected':''}" onclick="selectOpt('${q.id}',${opts.length},'その他',true)">
+            <div class="opt-radio"><div class="opt-dot"></div></div>
+            <span class="opt-emoji">✏️</span>
+            <span class="opt-label">${cat==='low'?'その他（じぶんで書く）':'その他（自分で書く）'}</span>
+          </label>
+          <input class="other-input${(cur.label==='その他'||cur.showInput)?' show':''}" id="otherinput_${q.id}"
+            placeholder="${q.otherInputLabel ? t(q.otherInputLabel) : (cat==='low'?'じぶんでかいてね…':'自由に書いてね…')}"
+            value="${cur.text||''}"
+            oninput="answers['${q.id}']={...answers['${q.id}'],text:this.value};validateChoices()">
+        </div>
+      </div>`;
+  }).join('');
+
+  const card = document.getElementById('mainCard');
+  card.innerHTML = `
+    <div class="char-row">
+      ${MINI_OWL}
+      <div class="bubble">
+        ${msg}
+        <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak,this)">🔊 もう一度きく</button>
+      </div>
+    </div>
+    <div class="step-badge">${step.emoji} ${step.badge}</div>
+    <h2>${t(step.title)}</h2>
+    ${questionsHTML}
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="prevStep()">← もどる</button>
+      <button class="btn btn-next" id="nextBtn" onclick="nextStep()" disabled>
+        ${currentStep === STEPS.length-1 ? '✨ 感想文をつくる！' : 'つぎへ →'}
+      </button>
+    </div>`;
+  validateChoices();
+  setTimeout(() => speak(msg), 500);
+}
+
+function selectOpt(qId, idx, label, showInput) {
+  const cur = answers[qId] || {};
+  answers[qId] = { label, text: cur.label === label ? cur.text : '', showInput: !!showInput };
+  // update UI
+  const container = document.getElementById('opts_' + qId);
+  if (!container) return;
+  container.querySelectorAll('.opt').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+  const otherInput = document.getElementById('otherinput_' + qId);
+  if (otherInput) {
+    otherInput.classList.toggle('show', !!showInput);
+    if (showInput) { otherInput.focus(); }
+  }
+  validateChoices();
+}
+
+function validateChoices() {
+  const step = STEPS[currentStep];
+  const btn = document.getElementById('nextBtn');
+  if (!btn || !step.questions) return;
+  const valid = step.questions.every(q => {
+    const ans = answers[q.id];
+    if (!ans || !ans.label) return false;
+    if (ans.showInput && (!ans.text || ans.text.trim() === '') && ans.label !== 'ない' && ans.label !== 'あんまりすすめない' && ans.label !== 'あまりすすめない') {
+      // text input required only for true "その他" (not showInput from options like "ある")
+      if (ans.label === 'その他') return false;
+    }
+    return true;
+  });
+  btn.disabled = !valid;
+}
+
+/* ===== NAVIGATION ===== */
+function saveInfoAnswers() {
+  const titleEl = document.getElementById('field_title');
+  const gradeEl = document.getElementById('field_grade');
+  if (titleEl) { answers.title = titleEl.value; }
+  if (gradeEl) { answers.grade = gradeEl.value; grade = gradeEl.value; }
+}
+
+function nextStep() {
+  stopSpeak();
+  if (currentStep === 0) saveInfoAnswers();
+  currentStep++;
+  renderStep();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function prevStep() {
+  stopSpeak();
+  currentStep--;
+  renderStep();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+/* ===== LOADING ===== */
+function renderLoading() {
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('stepsRow').innerHTML = STEP_EMOJIS.map(() => `<div class="step-dot done">✓</div>`).join('');
+  document.getElementById('mainCard').innerHTML = `
+    <div class="char-row">
+      ${MINI_OWL}
+      <div class="bubble">
+        ${gradeCat()==='low' ? 'かんそう文を つくっているよ！すこし待ってね！' : '感想文の下書きを作っています！少し待ってね！'}
+      </div>
+    </div>
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <p>下書きを<br>つくっています<span class="loading-dots"></span></p>
+    </div>`;
+  speak(gradeCat()==='low' ? 'かんそう文をつくっているよ、すこしまっててね' : '感想文の下書きを作っています、少し待ってね');
+}
+
+/* ===== BUILD PROMPT ===== */
+function answerText(qId) {
+  const a = answers[qId];
+  if (!a) return '（未回答）';
+  if (a.label === 'その他') return a.text || '（その他）';
+  return a.label + (a.text ? `（${a.text}）` : '');
+}
+
+async function generateResult() {
+  const cat = gradeCat();
+  const gradeNum = parseInt(grade);
+  const prompt = `あなたは小学生の読書感想文を優しくサポートする先生です。
+以下の子どもの回答をもとに、感想文の「下書きメモ」を作ってください。
+
+【本のタイトル】${answers.title}
+【学年】${answers.grade}
+【お話のジャンル】${answerText('genre')}
+【主人公のタイプ】${answerText('mainChar')}
+【物語の結末】${answerText('ending')}
+【心に残った場面の位置】${answerText('sceneWhen')}
+【その場面の気持ち】${answerText('sceneFeel')}
+【自分の似た経験】${answerText('similarExp')}
+【これからしたいこと】${answerText('future')}
+【すすめたい人】${answerText('recommend')}
+【この本を選んだ理由】${answerText('reason')}
+
+以下の条件で書いてください：
+- ${grade}らしい、自然でやさしい言葉遣いで書く
+${gradeNum <= 2 ? '- ひらがなをメインにして、すでに習った漢字（一二三四五六七八九十山川田木本水火金土日月年大小上下人口手足目耳子学生）のみ使う' : ''}
+${gradeNum >= 3 && gradeNum <= 4 ? '- 小学校3〜4年生が習う漢字の範囲で書く' : ''}
+${gradeNum >= 5 ? '- 小学校5〜6年生らしい文章で書く' : ''}
+- 子ども自身が書いたような自然な文体で
+- 各ブロック3〜5文程度（長くなりすぎない）
+
+必ず以下のJSON形式だけで返してください（他のテキスト不要）:
+{
+  "block1": "【書き出し】この本を選んだ理由から始まる文章",
+  "block2": "【あらすじ】かんたんなあらすじ",
+  "block3": "【心に残った場面】場面と気持ち、自分の経験",
+  "block4": "【まとめ】読んでこれからどうしたいか"
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if (!data.content) throw new Error(data.error?.message || 'API error');
+    const text = data.content.map(c => c.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    renderResult(parsed);
+  } catch(e) {
+    document.getElementById('mainCard').innerHTML = `
+      <div class="char-row">${MINI_OWL}<div class="bubble">あれ、うまくいかなかったみたい…もう一度やってみてね！</div></div>
+      <div class="result-header"><div class="result-emoji">😢</div><div class="result-title">エラーが発生しました</div></div>
+      <div class="error-box">うまく生成できませんでした。<br>もう一度やり直してみてね。<br><small>${e.message}</small></div>
+      <button class="btn-restart" onclick="restart()">🔄 最初からやり直す</button>`;
+  }
+}
+
+/* ===== RESULT ===== */
+function renderResult(data) {
+  const blocks = [
+    {label:'📝 書き出し', key:'block1'},
+    {label:'📖 あらすじ', key:'block2'},
+    {label:'💬 心に残った場面', key:'block3'},
+    {label:'🌱 まとめ', key:'block4'},
+  ];
+  const cat = gradeCat();
+  const doneMsg = cat==='low' ? 'できたよ！コピーして つかってね！' : '下書きメモができたよ！コピーして使ってね！';
+  document.getElementById('mainCard').innerHTML = `
+    <div class="char-row">
+      ${MINI_OWL}
+      <div class="bubble">
+        ${doneMsg}
+        <button class="bubble-voice" data-speak="${doneMsg}" onclick="toggleSpeak(this.dataset.speak,this)">🔊 もう一度きく</button>
+      </div>
+    </div>
+    <div class="result-header">
+      <div class="result-emoji">🎉</div>
+      <div class="result-title">${cat==='low'?'下書きメモができたよ！':'下書きメモができたよ！'}</div>
+    </div>
+    ${blocks.map(b=>`
+      <div class="section-block">
+        <div class="section-label">${b.label}</div>
+        <div class="section-content">${data[b.key]||''}</div>
+      </div>`).join('')}
+    <button class="btn-copy" onclick="copyAll()">📋 ${cat==='low'?'ぜんぶコピーする':'全部コピーする'}</button>
+    <button class="btn-restart" onclick="restart()">🔄 ${cat==='low'?'もう一さつやってみる':'もう一冊やってみる'}</button>`;
+  speak(doneMsg);
+}
+
+function copyAll() {
+  const els = document.querySelectorAll('.section-content');
+  const text = Array.from(els).map(e => e.textContent).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  });
+}
+
+function restart() {
+  stopSpeak();
+  currentStep = 0;
+  answers = {};
+  grade = '3年生';
+  renderStep();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// Init
+renderStep();
+</script>
+</body>
+</html>
