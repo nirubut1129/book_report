@@ -33,7 +33,7 @@ body {
 
 /* ===== HEADER ===== */
 header {
-  background: linear-gradient(135deg, #4a90d9 0%, #5cba7d 100%);
+  background: url('images/IMG_7110.png') center / 220% auto no-repeat;
   padding: 20px 20px 38px;
   text-align: center;
   position: relative;
@@ -43,7 +43,7 @@ header::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='3' fill='rgba(255,255,255,0.08)'/%3E%3Ccircle cx='40' cy='35' r='5' fill='rgba(255,255,255,0.06)'/%3E%3Ccircle cx='55' cy='8' r='2' fill='rgba(255,255,255,0.1)'/%3E%3C/svg%3E");
+  background: rgba(74, 144, 217, 0.55);
 }
 .header-mascot {
   position: relative;
@@ -57,6 +57,7 @@ header::before {
 }
 .header-mascot img { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); width: 110px; height: 120px; object-fit: contain; }
 .char-mini { object-fit: contain; }
+.char-large { width: 140px; height: 155px; object-fit: cover; object-position: center; border-radius: 50%; }
 .header-sparkle {
   position: absolute;
   top: -4px; right: -8px;
@@ -468,7 +469,7 @@ header p {
 
 <header>
   <div class="header-mascot">
-    <img id="headerOwl" src="IMG_7110.png" alt="ホクリ" onerror="this.style.visibility='hidden'">
+    <img id="headerOwl" src="images/IMG_7110.png" alt="ホクリ" onerror="this.style.visibility='hidden'">
     <span class="header-sparkle">✨</span>
   </div>
   <h1>📚 読書感想文<br>かんたんサポート</h1>
@@ -496,9 +497,10 @@ header p {
 
 <script>
 /* ===== CHARACTER IMAGES ===== */
-function getCharImg(type) {
-  const src = { start:'IMG_7110.png', mid:'IMG_7111.png', end:'IMG_7112.png' }[type] || 'IMG_7111.png';
-  return `<img class="char-mini" src="${src}" alt="ホクリ" onerror="this.style.visibility='hidden'">`;
+function getCharImg(type, large) {
+  const src = { start:'images/IMG_7110.png', mid:'images/IMG_7111.png', end:'images/IMG_7112.png' }[type] || 'images/IMG_7111.png';
+  const cls = large ? 'char-large' : 'char-mini';
+  return `<img class="${cls}" src="${src}" alt="ホクリ" onerror="this.style.visibility='hidden'">`;
 }
 
 /* ===== DEMO MODE ===== */
@@ -964,7 +966,7 @@ function renderInfoStep(step) {
   const card = document.getElementById('mainCard');
   card.innerHTML = `
     <div class="char-row">
-      ${getCharImg('start')}
+      ${getCharImg('start', true)}
       <div class="bubble">
         ${msg}
         <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak, this)">🔊 もう一度きく</button>
@@ -1042,7 +1044,7 @@ function renderChoiceStep(step) {
   const card = document.getElementById('mainCard');
   card.innerHTML = `
     <div class="char-row">
-      ${getCharImg('mid')}
+      ${getCharImg(currentStep <= 1 ? 'start' : 'mid')}
       <div class="bubble">
         ${msg}
         <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak,this)">🔊 もう一度きく</button>
