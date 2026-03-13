@@ -33,7 +33,7 @@ body {
 
 /* ===== HEADER ===== */
 header {
-  background: linear-gradient(135deg, #4a90d9 0%, #5cba7d 100%);
+  background: url('images/IMG_7110.png') center / 220% auto no-repeat;
   padding: 20px 20px 38px;
   text-align: center;
   position: relative;
@@ -43,7 +43,7 @@ header::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='3' fill='rgba(255,255,255,0.08)'/%3E%3Ccircle cx='40' cy='35' r='5' fill='rgba(255,255,255,0.06)'/%3E%3Ccircle cx='55' cy='8' r='2' fill='rgba(255,255,255,0.1)'/%3E%3C/svg%3E");
+  background: rgba(74, 144, 217, 0.55);
 }
 .header-mascot {
   position: relative;
@@ -57,6 +57,7 @@ header::before {
 }
 .header-mascot img { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); width: 110px; height: 120px; object-fit: contain; }
 .char-mini { object-fit: contain; }
+.char-large { width: 140px; height: 155px; object-fit: cover; object-position: center; border-radius: 50%; }
 .header-sparkle {
   position: absolute;
   top: -4px; right: -8px;
@@ -468,7 +469,7 @@ header p {
 
 <header>
   <div class="header-mascot">
-    <img id="headerOwl" src="IMG_7110.png" alt="ホクリ" onerror="this.style.visibility='hidden'">
+    <img id="headerOwl" src="images/IMG_7110.png" alt="ホクリ" onerror="this.style.visibility='hidden'">
     <span class="header-sparkle">✨</span>
   </div>
   <h1>📚 読書感想文<br>かんたんサポート</h1>
@@ -496,9 +497,10 @@ header p {
 
 <script>
 /* ===== CHARACTER IMAGES ===== */
-function getCharImg(type) {
-  const src = { start:'IMG_7110.png', mid:'IMG_7111.png', end:'IMG_7112.png' }[type] || 'IMG_7111.png';
-  return `<img class="char-mini" src="${src}" alt="ホクリ" onerror="this.style.visibility='hidden'">`;
+function getCharImg(type, large) {
+  const src = { start:'images/IMG_7110.png', mid:'images/IMG_7111.png', end:'images/IMG_7112.png' }[type] || 'images/IMG_7111.png';
+  const cls = large ? 'char-large' : 'char-mini';
+  return `<img class="${cls}" src="${src}" alt="ホクリ" onerror="this.style.visibility='hidden'">`;
 }
 
 /* ===== DEMO MODE ===== */
@@ -508,12 +510,71 @@ function toggleDemoMode() {
   if (isDemoMode()) { localStorage.removeItem(DEMO_MODE_KEY); } else { localStorage.setItem(DEMO_MODE_KEY, '1'); }
   renderStep();
 }
-const DEMO_RESULT = {
-  block1: "ぼくがこの本をえらんだのは、ひょうしのえがかっこよくて、どんなおはなしかきになったからです。ともだちもよんでいて、おもしろいといっていたので、よんでみようとおもいました。",
-  block2: "このおはなしは、げんきな男の子が大きなぼうけんにでかけるおはなしです。とちゅうでなかまとであい、いっしょにもんだいをといていきます。さいごには、みんなのちからをあわせてゴールにたどりつきました。",
-  block3: "いちばんこころにのこったのは、なかまがピンチのときに主人公がたすけにいく場面です。ぼくもともだちがこまっているとき、たすけたいなとおもいます。じぶんも、いちどともだちをはげましたことがあって、そのときのことをおもいだしました。",
-  block4: "この本をよんで、なかまをたいせつにすることのすばらしさがわかりました。これからは、もっとともだちのことをかんがえてこうどうしたいとおもいます。おなじさくしゃのほかの本もよんでみたいです。"
-};
+function buildDemoResult() {
+  const cat = gradeCat();
+  const low = cat === 'low';
+  const title = answers.title || 'この本';
+
+  // 選んだ理由 → block1
+  const reasonLabel = (answers.reason && answers.reason.label) || '';
+  let block1 = '';
+  if (low) {
+    if (reasonLabel.includes('表紙')) block1 = `ぼくが「${title}」をえらんだのは、ひょうしのえがきになったからです。`;
+    else if (reasonLabel.includes('タイトル')) block1 = `ぼくが「${title}」をえらんだのは、タイトルがおもしろそうだったからです。`;
+    else if (reasonLabel.includes('すすめ')) block1 = `ぼくが「${title}」をえらんだのは、先生やともだちにすすめてもらったからです。`;
+    else if (reasonLabel.includes('じゅぎょう') || reasonLabel.includes('授業')) block1 = `ぼくが「${title}」をえらんだのは、じゅぎょうで出てきたからです。`;
+    else if (reasonLabel.includes('気になって')) block1 = `ぼくが「${title}」をえらんだのは、ずっとよみたいとおもっていたからです。`;
+    else block1 = `ぼくが「${title}」をえらんだのは、きょうみをもったからです。`;
+  } else {
+    if (reasonLabel.includes('表紙')) block1 = `わたしが「${title}」を選んだのは、表紙のデザインに引きつけられたからです。`;
+    else if (reasonLabel.includes('タイトル')) block1 = `わたしが「${title}」を選んだのは、タイトルに興味を持ったからです。`;
+    else if (reasonLabel.includes('すすめ')) block1 = `わたしが「${title}」を選んだのは、先生や友だちにすすめてもらったからです。`;
+    else if (reasonLabel.includes('授業')) block1 = `わたしが「${title}」を選んだのは、授業で紹介されたことがきっかけです。`;
+    else if (reasonLabel.includes('気になって')) block1 = `わたしが「${title}」を選んだのは、以前からずっと読みたいと思っていたからです。`;
+    else block1 = `わたしが「${title}」を選んだのは、興味を持ったからです。`;
+  }
+
+  // ジャンル・主人公・結末 → block2
+  const genreLabel = (answers.genre && answers.genre.label) || '';
+  const charLabel = (answers.mainChar && answers.mainChar.label) || '';
+  const endLabel = (answers.ending && answers.ending.label) || '';
+  let block2 = '';
+  if (low) {
+    block2 = `このお話は${genreLabel}です。主人公は${charLabel}で、お話は${endLabel}でした。`;
+  } else {
+    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。物語の結末は${endLabel}でした。`;
+  }
+
+  // 心に残った場面・気持ち・似た経験 → block3
+  const sceneWhenLabel = (answers.sceneWhen && answers.sceneWhen.label) || '';
+  const sceneFeelLabel = (answers.sceneFeel && answers.sceneFeel.label) || '';
+  const similarLabel = (answers.similarExp && answers.similarExp.label) || '';
+  const similarText = (answers.similarExp && answers.similarExp.text) || '';
+  let block3 = '';
+  if (low) {
+    block3 = `いちばんこころにのこったのは${sceneWhenLabel}の場面です。そのとき、${sceneFeelLabel}です。`;
+    if (similarText) block3 += `じぶんにも「${similarText}」というけいけんがあって、そのことをおもいだしました。`;
+    else if (!similarLabel.includes('ない')) block3 += `じぶんにも似たようなけいけんがあって、かんじがしました。`;
+  } else {
+    block3 = `最も印象に残ったのは${sceneWhenLabel}の場面です。読んでいて${sceneFeelLabel}気持ちになりました。`;
+    if (similarText) block3 += `自分自身も「${similarText}」という経験があり、主人公の気持ちがよく分かりました。`;
+    else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があり、主人公の気持ちがよく伝わりました。`;
+  }
+
+  // これから・すすめたい人 → block4
+  const futureLabel = (answers.future && answers.future.label) || '';
+  const recommendLabel = (answers.recommend && answers.recommend.label) || '';
+  let block4 = '';
+  if (low) {
+    block4 = `この本をよんで、${futureLabel}とおもいました。`;
+    if (recommendLabel && !recommendLabel.includes('すすめない')) block4 += `${recommendLabel}にもぜひよんでほしいです。`;
+  } else {
+    block4 = `この本を読んで、${futureLabel}と思いました。`;
+    if (recommendLabel && !recommendLabel.includes('すすめない')) block4 += `ぜひ${recommendLabel}にもおすすめしたいです。`;
+  }
+
+  return { block1, block2, block3, block4 };
+}
 
 /* ===== API KEY ===== */
 const API_KEY_STORE = 'hokuri_api_key';
@@ -905,7 +966,7 @@ function renderInfoStep(step) {
   const card = document.getElementById('mainCard');
   card.innerHTML = `
     <div class="char-row">
-      ${getCharImg('start')}
+      ${getCharImg('start', true)}
       <div class="bubble">
         ${msg}
         <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak, this)">🔊 もう一度きく</button>
@@ -983,7 +1044,7 @@ function renderChoiceStep(step) {
   const card = document.getElementById('mainCard');
   card.innerHTML = `
     <div class="char-row">
-      ${getCharImg('mid')}
+      ${getCharImg(currentStep <= 1 ? 'start' : 'mid')}
       <div class="bubble">
         ${msg}
         <button class="bubble-voice" data-speak="${msg.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak,this)">🔊 もう一度きく</button>
@@ -1087,7 +1148,7 @@ function answerText(qId) {
 async function generateResult() {
   if (isDemoMode()) {
     await new Promise(r => setTimeout(r, 1200));
-    renderResult(DEMO_RESULT);
+    renderResult(buildDemoResult());
     return;
   }
   if (!getApiKey()) {
