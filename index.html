@@ -501,6 +501,20 @@ function getCharImg(type) {
   return `<img class="char-mini" src="${src}" alt="ホクリ" onerror="this.style.visibility='hidden'">`;
 }
 
+/* ===== DEMO MODE ===== */
+const DEMO_MODE_KEY = 'hokuri_demo_mode';
+function isDemoMode() { return localStorage.getItem(DEMO_MODE_KEY) === '1'; }
+function toggleDemoMode() {
+  if (isDemoMode()) { localStorage.removeItem(DEMO_MODE_KEY); } else { localStorage.setItem(DEMO_MODE_KEY, '1'); }
+  renderStep();
+}
+const DEMO_RESULT = {
+  block1: "ぼくがこの本をえらんだのは、ひょうしのえがかっこよくて、どんなおはなしかきになったからです。ともだちもよんでいて、おもしろいといっていたので、よんでみようとおもいました。",
+  block2: "このおはなしは、げんきな男の子が大きなぼうけんにでかけるおはなしです。とちゅうでなかまとであい、いっしょにもんだいをといていきます。さいごには、みんなのちからをあわせてゴールにたどりつきました。",
+  block3: "いちばんこころにのこったのは、なかまがピンチのときに主人公がたすけにいく場面です。ぼくもともだちがこまっているとき、たすけたいなとおもいます。じぶんも、いちどともだちをはげましたことがあって、そのときのことをおもいだしました。",
+  block4: "この本をよんで、なかまをたいせつにすることのすばらしさがわかりました。これからは、もっとともだちのことをかんがえてこうどうしたいとおもいます。おなじさくしゃのほかの本もよんでみたいです。"
+};
+
 /* ===== API KEY ===== */
 const API_KEY_STORE = 'hokuri_api_key';
 function getApiKey() { return localStorage.getItem(API_KEY_STORE) || ''; }
@@ -508,18 +522,22 @@ function saveApiKey(key) { localStorage.setItem(API_KEY_STORE, key); }
 function renderApiKeySection() {
   const key = getApiKey();
   const hasKey = key.length > 0;
+  const demo = isDemoMode();
   const cat = gradeCat();
   const label = cat === 'low' ? '🔑 APIキーをせっていする' : '🔑 APIキーを設定する';
   const statusText = hasKey ? '✅ APIキーが設定されています' : (cat==='low' ? '⚠️ APIキーがせっていされていません' : '⚠️ APIキーが設定されていません');
   return `<div class="api-key-section">
-    <div class="api-key-toggle" onclick="var b=document.getElementById('apiKeyBody');b.style.display=b.style.display==='none'?'flex':'none'">
-      ${label} ${hasKey ? '✅ ▾' : '⚠️ ▾'}
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="api-key-toggle" onclick="var b=document.getElementById('apiKeyBody');b.style.display=b.style.display==='none'?'flex':'none'">
+        ${label} ${hasKey ? '✅ ▾' : '⚠️ ▾'}
+      </div>
+      <button onclick="toggleDemoMode()" style="font-size:0.75rem;padding:4px 10px;border-radius:20px;border:2px solid ${demo?'#ff8c42':'#ccc'};background:${demo?'#fff3e6':'#f5f5f5'};color:${demo?'#ff8c42':'#888'};cursor:pointer;font-weight:700;">${demo?'🧪 デモON':'🧪 デモOFF'}</button>
     </div>
     <div class="api-key-body" id="apiKeyBody" style="display:${hasKey?'none':'flex'}">
       <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." value="">
       <button class="api-key-save-btn" onclick="saveApiKeyFromInput()">${cat==='low'?'ほぞん':'保存'}</button>
     </div>
-    <div class="api-key-status ${hasKey?'':'not-set'}">${statusText}</div>
+    <div class="api-key-status ${hasKey?'':'not-set'}">${demo ? '🧪 デモモード（サンプル結果が表示されます）' : statusText}</div>
   </div>`;
 }
 function saveApiKeyFromInput() {
@@ -1067,6 +1085,11 @@ function answerText(qId) {
 }
 
 async function generateResult() {
+  if (isDemoMode()) {
+    await new Promise(r => setTimeout(r, 1200));
+    renderResult(DEMO_RESULT);
+    return;
+  }
   if (!getApiKey()) {
     document.getElementById('mainCard').innerHTML = `
       <div class="char-row">${getCharImg('mid')}<div class="bubble">APIキーが設定されていないよ！もどって設定してね。</div></div>
