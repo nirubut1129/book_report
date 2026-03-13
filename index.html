@@ -55,7 +55,7 @@ header::before {
   0%,100% { transform: translateY(0) rotate(-2deg); }
   50% { transform: translateY(-10px) rotate(2deg); }
 }
-.header-mascot img { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); width: 110px; height: 110px; object-fit: cover; object-position: center; border-radius: 50%; }
+.header-mascot img { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); width: 88%; max-width: 340px; height: auto; object-fit: contain; display: block; margin: 0 auto; }
 .char-mini { object-fit: cover; object-position: center; border-radius: 50%; }
 .char-large { width: 140px; height: 140px; object-fit: cover; object-position: center; border-radius: 50%; }
 .header-sparkle {
@@ -513,25 +513,76 @@ function toggleDemoMode() {
 function buildDemoResult() {
   const cat = gradeCat();
   const low = cat === 'low';
+  const high = cat === 'high';
   const title = answers.title || 'この本';
+
+  // ヘルパー：結末ラベルを自然な文末表現に変換
+  function normalizeEnding(label) {
+    if (!label) return low ? 'おわりました' : '終わりました';
+    if (label.includes('ハッピー') || label.includes('よかった'))
+      return low ? 'さいごはみんながしあわせになる、よいおわりでした' : '最後はみんなが幸せになる、よい終わり方でした';
+    if (label.includes('かなし') || label.includes('悲し') || label.includes('悲劇'))
+      return low ? 'かなしいおわりでした' : '悲しい終わり方でした';
+    if (label.includes('どちら') || label.includes('余韻') || label.includes('よく分からない') || label.includes('わからない'))
+      return low ? 'どんなふうにおわるかよくわからない、ふしぎなおわりかたでした' : '考えさせられるような終わり方でした';
+    return low ? 'まだよみとちゅうです' : 'まだ読み途中です';
+  }
+
+  // ヘルパー：気持ちラベルを「〜な気持ちに」の形に変換
+  function normalizeFeeling(label) {
+    if (!label) return low ? 'いろいろなきもちに' : 'いろいろな気持ちに';
+    if (label.includes('かなし') || label.includes('悲し'))
+      return low ? 'かなしくてなきそうな気もちに' : '悲しくて泣きそうな気持ちに';
+    if (label.includes('うれし') || label.includes('温か') || label.includes('あたたか'))
+      return low ? 'うれしくてあたたかい気もちに' : 'うれしくて温かい気持ちに';
+    if (label.includes('びっくり') || label.includes('ドキドキ'))
+      return low ? 'びっくりしてドキドキした気もちに' : 'びっくりしてドキドキした気持ちに';
+    if (label.includes('笑') || label.includes('わら'))
+      return low ? 'おもわずわらってしまいそうな気もちに' : '思わず笑ってしまうような気持ちに';
+    if (label.includes('くやし') || label.includes('もどか') || label.includes('もやもや'))
+      return low ? 'もやもやしてくやしい気もちに' : 'くやしくてもどかしい気持ちに';
+    return low ? 'いろいろなきもちに' : 'いろいろな気持ちに';
+  }
+
+  // ヘルパー：「これから」ラベルを自然な文に変換
+  function normalizeFuture(label) {
+    if (!label || label.includes('特になし') || label.includes('とくになし') || label.includes('特に変化'))
+      return low ? 'いろいろなことをかんがえることができました' : 'さまざまなことを考えることができました';
+    if (label.includes('変わった') || label.includes('変化'))
+      return low ? 'ものの見かたがかわりました' : '物の見方・考え方が変わりました';
+    if (label.includes('やさしく') || label.includes('優しく') || label.includes('思いやり'))
+      return low ? 'ともだちやかぞくにやさしくしたいとおもいました' : '友だちや家族にもっと優しくしたいと思いました';
+    if (label.includes('挑戦') || label.includes('ちょうせん'))
+      return low ? 'なにかにちょうせんしてみたいとおもいました' : '何かに挑戦してみたいと思いました';
+    if (label.includes('感謝') || label.includes('かんしゃ'))
+      return low ? 'まわりの人にかんしゃをつたえたいとおもいました' : '感謝を伝えることを大切にしたいと思いました';
+    return low ? 'いろいろなことをかんがえることができました' : 'さまざまなことを考えることができました';
+  }
 
   // 選んだ理由 → block1
   const reasonLabel = (answers.reason && answers.reason.label) || '';
   let block1 = '';
   if (low) {
-    if (reasonLabel.includes('表紙')) block1 = `ぼくが「${title}」をえらんだのは、ひょうしのえがきになったからです。`;
+    if (reasonLabel.includes('表紙')) block1 = `ぼくが「${title}」をえらんだのは、ひょうしのえにひきつけられたからです。`;
     else if (reasonLabel.includes('タイトル')) block1 = `ぼくが「${title}」をえらんだのは、タイトルがおもしろそうだったからです。`;
     else if (reasonLabel.includes('すすめ')) block1 = `ぼくが「${title}」をえらんだのは、先生やともだちにすすめてもらったからです。`;
     else if (reasonLabel.includes('じゅぎょう') || reasonLabel.includes('授業')) block1 = `ぼくが「${title}」をえらんだのは、じゅぎょうで出てきたからです。`;
-    else if (reasonLabel.includes('気になって')) block1 = `ぼくが「${title}」をえらんだのは、ずっとよみたいとおもっていたからです。`;
+    else if (reasonLabel.includes('気になって') || reasonLabel.includes('きになって')) block1 = `ぼくが「${title}」をえらんだのは、ずっとよみたいとおもっていたからです。`;
     else block1 = `ぼくが「${title}」をえらんだのは、きょうみをもったからです。`;
+  } else if (high) {
+    if (reasonLabel.includes('表紙') || reasonLabel.includes('デザイン')) block1 = `わたしが「${title}」を選んだのは、表紙のデザインに引き付けられたからです。`;
+    else if (reasonLabel.includes('タイトル')) block1 = `わたしが「${title}」を選んだのは、タイトルに強く興味を持ったからです。`;
+    else if (reasonLabel.includes('すすめ')) block1 = `わたしが「${title}」を選んだのは、先生や友人にすすめてもらったことがきっかけです。`;
+    else if (reasonLabel.includes('授業')) block1 = `わたしが「${title}」を選んだのは、授業で紹介されたことがきっかけです。`;
+    else if (reasonLabel.includes('気になって') || reasonLabel.includes('以前から')) block1 = `わたしが「${title}」を選んだのは、以前からずっと読みたいと思っていたからです。`;
+    else block1 = `わたしが「${title}」を選んだのは、内容に興味を持ったからです。`;
   } else {
     if (reasonLabel.includes('表紙')) block1 = `わたしが「${title}」を選んだのは、表紙のデザインに引きつけられたからです。`;
-    else if (reasonLabel.includes('タイトル')) block1 = `わたしが「${title}」を選んだのは、タイトルに興味を持ったからです。`;
+    else if (reasonLabel.includes('タイトル')) block1 = `わたしが「${title}」を選んだのは、タイトルが面白そうだったからです。`;
     else if (reasonLabel.includes('すすめ')) block1 = `わたしが「${title}」を選んだのは、先生や友だちにすすめてもらったからです。`;
     else if (reasonLabel.includes('授業')) block1 = `わたしが「${title}」を選んだのは、授業で紹介されたことがきっかけです。`;
-    else if (reasonLabel.includes('気になって')) block1 = `わたしが「${title}」を選んだのは、以前からずっと読みたいと思っていたからです。`;
-    else block1 = `わたしが「${title}」を選んだのは、興味を持ったからです。`;
+    else if (reasonLabel.includes('気になって')) block1 = `わたしが「${title}」を選んだのは、前からずっと読んでみたかったからです。`;
+    else block1 = `わたしが「${title}」を選んだのは、内容に興味を持ったからです。`;
   }
 
   // ジャンル・主人公・結末 → block2
@@ -540,9 +591,9 @@ function buildDemoResult() {
   const endLabel = (answers.ending && answers.ending.label) || '';
   let block2 = '';
   if (low) {
-    block2 = `このお話は${genreLabel}です。主人公は${charLabel}で、お話は${endLabel}でした。`;
+    block2 = `このお話は${genreLabel}です。主人公は${charLabel}で、${normalizeEnding(endLabel)}。`;
   } else {
-    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。物語の結末は${endLabel}でした。`;
+    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。`;
   }
 
   // 心に残った場面・気持ち・似た経験 → block3
@@ -550,27 +601,51 @@ function buildDemoResult() {
   const sceneFeelLabel = (answers.sceneFeel && answers.sceneFeel.label) || '';
   const similarLabel = (answers.similarExp && answers.similarExp.label) || '';
   const similarText = (answers.similarExp && answers.similarExp.text) || '';
+  const allScene = sceneWhenLabel.includes('ぜんぶ') || sceneWhenLabel.includes('全体');
   let block3 = '';
   if (low) {
-    block3 = `いちばんこころにのこったのは${sceneWhenLabel}の場面です。そのとき、${sceneFeelLabel}です。`;
-    if (similarText) block3 += `じぶんにも「${similarText}」というけいけんがあって、そのことをおもいだしました。`;
-    else if (!similarLabel.includes('ない')) block3 += `じぶんにも似たようなけいけんがあって、かんじがしました。`;
+    block3 = allScene
+      ? `このお話はどのばめんもこころにのこりました。よんでいて、${normalizeFeeling(sceneFeelLabel)}なりました。`
+      : `いちばんこころにのこったのは、${sceneWhenLabel}のばめんです。そのばめんでは、${normalizeFeeling(sceneFeelLabel)}なりました。`;
+    if (similarText) block3 += `じぶんにも「${similarText}」というけいけんがあって、しゅじんこうのきもちがよくわかりました。`;
+    else if (!similarLabel.includes('ない')) block3 += `じぶんにも似たようなけいけんがあったので、しゅじんこうのきもちがよくわかりました。`;
+  } else if (high) {
+    block3 = allScene
+      ? `この物語は全体を通して印象に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
+      : `最も印象に残ったのは${sceneWhenLabel}の場面で、${normalizeFeeling(sceneFeelLabel)}なりました。`;
+    if (similarText) block3 += `自分自身も「${similarText}」という経験があり、主人公の気持ちがとてもよく分かりました。`;
+    else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があり、主人公の気持ちが深く伝わってきました。`;
   } else {
-    block3 = `最も印象に残ったのは${sceneWhenLabel}の場面です。読んでいて${sceneFeelLabel}気持ちになりました。`;
-    if (similarText) block3 += `自分自身も「${similarText}」という経験があり、主人公の気持ちがよく分かりました。`;
-    else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があり、主人公の気持ちがよく伝わりました。`;
+    block3 = allScene
+      ? `この物語は全体的に心に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
+      : `最も心に残ったのは、${sceneWhenLabel}の場面です。その場面では、${normalizeFeeling(sceneFeelLabel)}なりました。`;
+    if (similarText) block3 += `自分にも「${similarText}」という経験があり、主人公の気持ちがよく分かりました。`;
+    else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があって、主人公の気持ちが伝わってきました。`;
   }
 
   // これから・すすめたい人 → block4
   const futureLabel = (answers.future && answers.future.label) || '';
   const recommendLabel = (answers.recommend && answers.recommend.label) || '';
+  const futureText = normalizeFuture(futureLabel);
   let block4 = '';
   if (low) {
-    block4 = `この本をよんで、${futureLabel}とおもいました。`;
-    if (recommendLabel && !recommendLabel.includes('すすめない')) block4 += `${recommendLabel}にもぜひよんでほしいです。`;
+    block4 = `この本をよんで、${futureText}。`;
+    if (recommendLabel && !recommendLabel.includes('すすめない')) {
+      const who = recommendLabel.replace('にすすめたい', '');
+      block4 += `${who}にも、ぜひよんでほしいとおもいます。`;
+    }
+  } else if (high) {
+    block4 = `この本を読んで、${futureText}。`;
+    if (recommendLabel && !recommendLabel.includes('すすめない')) {
+      const who = recommendLabel.replace('にすすめたい', '');
+      block4 += `ぜひ${who}にも読んでほしいと思います。`;
+    }
   } else {
-    block4 = `この本を読んで、${futureLabel}と思いました。`;
-    if (recommendLabel && !recommendLabel.includes('すすめない')) block4 += `ぜひ${recommendLabel}にもおすすめしたいです。`;
+    block4 = `この本を読んで、${futureText}。`;
+    if (recommendLabel && !recommendLabel.includes('すすめない')) {
+      const who = recommendLabel.replace('にすすめたい', '');
+      block4 += `ぜひ${who}にも読んでもらいたいと思います。`;
+    }
   }
 
   return { block1, block2, block3, block4 };
@@ -1178,9 +1253,8 @@ async function generateResult() {
 
 以下の条件で書いてください：
 - ${grade}らしい、自然でやさしい言葉遣いで書く
-${gradeNum <= 2 ? '- ひらがなをメインにして、すでに習った漢字（一二三四五六七八九十山川田木本水火金土日月年大小上下人口手足目耳子学生）のみ使う' : ''}
-${gradeNum >= 3 && gradeNum <= 4 ? '- 小学校3〜4年生が習う漢字の範囲で書く' : ''}
-${gradeNum >= 5 ? '- 小学校5〜6年生らしい文章で書く' : ''}
+- 文章の文法を正しくし、子どもの回答（選択肢）を文中に自然な日本語として組み込む（例：「悲しかった・泣きそうになった」→「悲しくて泣きそうになりました」のように文として自然に変換する）
+- 【漢字ルール・必ず守ること】学習指導要領に基づき、${gradeNum === 1 ? `1年生配当の80字（一二三四五六七八九十百千上下左右中大小月日年早木林山川土空花草虫犬人名女男子目口手足見音力気円入出立休先生学校）のみ使用し、それ以外は全てひらがな` : `${gradeNum - 1}年生までに習う配当漢字（累積）のみ使用し、それ以外は全てひらがな。${gradeNum === 2 ? '例：「本→ほん」「読む→よむ」「書く→かく」「語→ご」（2年生配当）はひらがな' : gradeNum === 3 ? '例：「物語→ものがたり」「主人公→しゅじんこう」「場面→ばめん」「感動→かんどう」（3年生以降の配当）はひらがな' : gradeNum === 4 ? '例：「場面」「主人公」（3年生配当）は使用可。「感動→かんどう」「想像→そうぞう」（4年生配当）はひらがな' : gradeNum === 5 ? '例：「感動」「想像」（4年生配当）は使用可。「感謝→かんしゃ」「経験→けいけん」「複雑→ふくざつ」（5年生配当）はひらがな' : '例：「感謝」「経験」（5年生配当）は使用可。「責任→せきにん」「存在→そんざい」「演じる→えんじる」（6年生配当）はひらがな'}`}
 - 子ども自身が書いたような自然な文体で
 - 各ブロック3〜5文程度（長くなりすぎない）
 
