@@ -775,6 +775,7 @@ let grade = '3年生';
 let isSpeaking = false;
 let speakSessionId = 0;
 let bestJaVoice = null;
+let resultData = null; // 結果データをグローバルで保持（音声読み上げ用）
 
 function initVoice() {
   if (!window.speechSynthesis) return;
@@ -1593,6 +1594,17 @@ async function generateResult() {
   }
 }
 
+// 結果ブロックを1つ読む（keyで指定）
+function speakBlock(key) {
+  if (!resultData) return;
+  speakBlocks([resultData[key] || '']);
+}
+// 結果ブロックを全部読む
+function speakAllBlocks() {
+  if (!resultData) return;
+  speakBlocks(['block1','block2','block3','block4'].map(k => resultData[k] || ''));
+}
+
 // 複数テキストを順番に読み上げ（結果ブロック用）
 function speakBlocks(texts) {
   if (!window.speechSynthesis) return;
@@ -1623,6 +1635,7 @@ function renderResult(data) {
   const cat = gradeCat();
   const doneMsg = cat==='low' ? 'できたよ！コピーして つかってね！' : '下書きメモができたよ！コピーして使ってね！';
 
+  resultData = data; // グローバルに保存（音声ボタン用）
   const totalChars = blocks.reduce((sum, b) => sum + (data[b.key] || '').length, 0);
   const targetChars = answers.targetChars || (cat === 'low' ? 800 : 1200);
   const pct = Math.min(Math.round((totalChars / targetChars) * 100), 100);
@@ -1642,12 +1655,12 @@ function renderResult(data) {
       <div class="result-emoji">🎉</div>
       <div class="result-title">下書きメモができたよ！</div>
     </div>
-    <button class="btn-read-all" onclick="speakBlocks([${blocks.map(b=>`${JSON.stringify(data[b.key]||'')}`).join(',')}])">🔊 ${cat==='low'?'ぜんぶよむ':'全部読む'}</button>
+    <button class="btn-read-all" onclick="speakAllBlocks()">🔊 ${cat==='low'?'ぜんぶよむ':'全部読む'}</button>
     ${blocks.map(b=>`
       <div class="section-block">
         <div class="section-label">
           <span>${b.label}</span>
-          <button class="section-voice" onclick="speakBlocks([${JSON.stringify(data[b.key]||'')}])">🔊</button>
+          <button class="section-voice" onclick="speakBlock('${b.key}')">🔊</button>
         </div>
         <div class="section-content">${data[b.key]||''}</div>
       </div>`).join('')}
