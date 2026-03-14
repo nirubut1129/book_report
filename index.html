@@ -776,6 +776,7 @@ let isSpeaking = false;
 let speakSessionId = 0;
 let bestJaVoice = null;
 let resultData = null; // 結果データをグローバルで保持（音声読み上げ用）
+let isPageSpeak = false; // ページ進む時の自動音声フラグ
 
 function initVoice() {
   if (!window.speechSynthesis) return;
@@ -835,8 +836,27 @@ function speak(text) {
 }
 function stopSpeak() {
   speakSessionId++;
+  isPageSpeak = false;
   if (window.speechSynthesis) { window.speechSynthesis.cancel(); isSpeaking = false; }
   document.querySelectorAll('.speaking, .voice-highlight').forEach(b => b.classList.remove('speaking', 'voice-highlight'));
+}
+function speakPage(text) {
+  if (!window.speechSynthesis) return;
+  stopSpeak();
+  const sid = ++speakSessionId;
+  const u = new SpeechSynthesisUtterance(text);
+  applyVoice(u);
+  u.onstart = () => {
+    if (speakSessionId !== sid) return;
+    isSpeaking = true;
+    isPageSpeak = true;
+  };
+  u.onend = u.onerror = () => {
+    isSpeaking = false;
+    isPageSpeak = false;
+    document.querySelectorAll('.speaking').forEach(b => b.classList.remove('speaking'));
+  };
+  window.speechSynthesis.speak(u);
 }
 function toggleSpeak(text, el) {
   if (el.classList.contains('speaking')) { stopSpeak(); } else { speak(text); }
@@ -1352,7 +1372,7 @@ function renderInfoStep(step) {
     </div>`;
   validateInfo();
   // auto speak welcome
-  setTimeout(() => speak(msg), 500);
+  setTimeout(() => speakPage(msg), 500);
 }
 
 function validateInfo() {
@@ -1421,7 +1441,7 @@ function renderChoiceStep(step) {
       </button>
     </div>`;
   validateChoices();
-  setTimeout(() => speak(msg), 500);
+  setTimeout(() => speakPage(msg), 500);
 }
 
 function selectOpt(qId, idx, label, showInput) {
@@ -1640,7 +1660,7 @@ function renderResult(data) {
   const targetChars = answers.targetChars || (cat === 'low' ? 800 : 1200);
   const pct = Math.min(Math.round((totalChars / targetChars) * 100), 100);
   const charHint = cat === 'low'
-    ? 'これをさんこうに、にくをつけてかいてみてね！'
+    ? 'これをさんこうにかいてみてね！'
     : 'これを参考に、肉付けして書いてみてね！';
 
   document.getElementById('mainCard').innerHTML = `
@@ -1699,14 +1719,16 @@ function restart() {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// どこかを触ると音声が止まる（音声ボタン自体はtoggleSpeakで管理）
+// どこかを触ると音声が止まる（ページ遷移時の自動音声・音声ボタン自体はtoggleSpeakで管理）
 document.addEventListener('touchstart', (e) => {
   if (!isSpeaking) return;
+  if (isPageSpeak) return; // ページ進む時の音声はタップで止めない
   const voiceBtn = e.target.closest('.bubble-voice, .q-voice, .field-voice, .title-voice');
   if (!voiceBtn) stopSpeak();
 }, { passive: true });
 document.addEventListener('mousedown', (e) => {
   if (!isSpeaking) return;
+  if (isPageSpeak) return; // ページ進む時の音声はタップで止めない
   const voiceBtn = e.target.closest('.bubble-voice, .q-voice, .field-voice, .title-voice');
   if (!voiceBtn) stopSpeak();
 });
