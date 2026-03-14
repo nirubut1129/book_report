@@ -585,77 +585,126 @@ function buildDemoResult() {
     else block1 = `わたしが「${title}」を選んだのは、内容に興味を持ったからです。`;
   }
 
-  // block1に読む前の期待感を追加
+  // block1に読んでみた感想を追加（readImpressionの選択から）
+  const readImpressionLabel = (answers.readImpression && answers.readImpression.label) || '';
   if (low) {
-    block1 += `この本がどんなお話かとても気になっていました。よみはじめると、すぐにお話のせかいにひきこまれていきました。`;
+    if (readImpressionLabel.includes('はまって')) block1 += `よみはじめたら、すぐにお話のせかいにひきこまれて、どんどんよみつづけてしまいました。`;
+    else if (readImpressionLabel.includes('ゆっくり')) block1 += `ゆっくりとたのしみながらよむことができました。`;
+    else if (readImpressionLabel.includes('むずかしい')) block1 += `むずかしいところもありましたが、さいごまでよみきることができました。`;
+    else if (readImpressionLabel.includes('きたい') || readImpressionLabel.includes('もっとよかった')) block1 += `きたいしていたよりもっとおもしろくて、よんでよかったとおもいました。`;
+    else if (readImpressionLabel.includes('すっきり')) block1 += `よみおわったときに、すっきりとしたきもちになりました。`;
+    else block1 += `この本がどんなお話かとても気になっていました。`;
   } else if (high) {
-    block1 += `読む前から、この本に対して強い期待と興味を持っていました。実際に読み始めると、その期待をはるかに上回る内容でした。`;
+    if (readImpressionLabel.includes('一気') || readImpressionLabel.includes('はまって')) block1 += `読み始めると止まらなくなり、一気に読み進めてしまいました。`;
+    else if (readImpressionLabel.includes('じっくり') || readImpressionLabel.includes('ゆっくり')) block1 += `じっくりと内容を味わいながら読み進めることができました。`;
+    else if (readImpressionLabel.includes('難し') || readImpressionLabel.includes('読みごたえ')) block1 += `難しい内容もありましたが、読みごたえのある作品でした。`;
+    else if (readImpressionLabel.includes('期待以上') || readImpressionLabel.includes('もっとよかった')) block1 += `実際に読み始めると、期待をはるかに上回る内容でした。`;
+    else if (readImpressionLabel.includes('充実') || readImpressionLabel.includes('達成') || readImpressionLabel.includes('すっきり')) block1 += `読み終えたとき、大きな充実感と達成感を感じました。`;
+    else block1 += `読む前から、この本に対して強い期待と興味を持っていました。`;
   } else {
-    block1 += `読む前は、どんなお話かワクワクしながら期待していました。読み始めたら、すぐにお話の世界に引き込まれていきました。`;
+    if (readImpressionLabel.includes('はまって')) block1 += `読み始めたら止まらなくなり、どんどん読み進めてしまいました。`;
+    else if (readImpressionLabel.includes('ゆっくり')) block1 += `ゆっくり楽しみながら読み進めることができました。`;
+    else if (readImpressionLabel.includes('難しい') || readImpressionLabel.includes('難し')) block1 += `難しいところもありましたが、最後まで読み切ることができました。`;
+    else if (readImpressionLabel.includes('期待') || readImpressionLabel.includes('もっとよかった')) block1 += `読み始めると期待以上におもしろくて、よかったと思いました。`;
+    else if (readImpressionLabel.includes('すっきり')) block1 += `読み終えたとき、すっきりとした気持ちになりました。`;
+    else block1 += `読む前は、どんなお話かワクワクしながら期待していました。`;
   }
 
-  // ジャンル・主人公・結末 → block2
+  // ジャンル・主人公・結末・主人公の挑戦 → block2
   const genreLabel = (answers.genre && answers.genre.label) || '';
   const charLabel = (answers.mainChar && answers.mainChar.label) || '';
   const endLabel = (answers.ending && answers.ending.label) || '';
+  const charChallengeLabel = (answers.charChallenge && answers.charChallenge.label) || '';
+  // charChallengeラベルを文中に使える形に変換
+  function normalizeChallenge(label) {
+    if (!label) return low ? 'いろいろなことにぶつかりながらもがんばっていました' : 'さまざまな困難に立ち向かいながら頑張っていました';
+    if (label.includes('けんか') || label.includes('仲直り') || label.includes('葛藤')) return low ? 'ともだちとのけんかやなかなおりにがんばっていました' : '人間関係の悩みや仲直りに一生懸命取り組んでいました';
+    if (label.includes('目標') || label.includes('もくひょう') || label.includes('挑戦') || label.includes('ちょうせん')) return low ? 'むずかしいもくひょうにむかってちょうせんしつづけていました' : '高い目標に向かって挑戦し続けていました';
+    if (label.includes('悲し') || label.includes('かなし') || label.includes('喪失') || label.includes('のりこえ')) return low ? 'かなしいできごとをのりこえようとがんばっていました' : '悲しい出来事を乗り越えようと前向きに頑張っていました';
+    if (label.includes('こわい') || label.includes('恐') || label.includes('困難') || label.includes('こんなん')) return low ? 'こわいものやこんなんにゆうきをもって立ち向かっていました' : '恐怖や困難にも勇気をもって立ち向かっていました';
+    if (label.includes('気持ち') || label.includes('きもち') || label.includes('伝え') || label.includes('つたえ') || label.includes('表現')) return low ? 'じぶんのきもちをつたえようとがんばっていました' : '自分の気持ちや思いを伝えることに一生懸命でした';
+    return low ? 'いろいろなことにぶつかりながらもがんばっていました' : 'さまざまな困難に立ち向かいながら頑張っていました';
+  }
   let block2 = '';
   if (low) {
-    block2 = `このお話は${genreLabel}です。主人公は${charLabel}で、${normalizeEnding(endLabel)}。お話の中で、しゅじんこうはいろいろなことにぶつかりながらも、ぜんりょくでがんばっていました。そのすがたがとてもこころに残りました。`;
+    block2 = `このお話は${genreLabel}です。主人公は${charLabel}で、${normalizeEnding(endLabel)}。お話の中で、しゅじんこうは${normalizeChallenge(charChallengeLabel)}。そのすがたがとてもこころに残りました。`;
   } else if (high) {
-    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。物語全体を通して、主人公の成長が丁寧に描かれており、読み応えのある作品でした。一つひとつの出来事が積み重なって、クライマックスへとつながっていきます。`;
+    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。物語全体を通して、主人公は${normalizeChallenge(charChallengeLabel)}。その姿が丁寧に描かれており、読み応えのある作品でした。`;
   } else {
-    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。物語の中で主人公はさまざまな困難に直面しながらも、一歩ずつ前に進んでいきます。その姿がとても印象的でした。`;
+    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。物語の中で主人公は${normalizeChallenge(charChallengeLabel)}。その姿がとても印象的でした。`;
   }
 
   // 心に残った場面・気持ち・似た経験 → block3
   const sceneWhenLabel = (answers.sceneWhen && answers.sceneWhen.label) || '';
   const sceneFeelLabel = (answers.sceneFeel && answers.sceneFeel.label) || '';
+  const sceneReasonLabel = (answers.sceneReason && answers.sceneReason.label) || '';
   const similarLabel = (answers.similarExp && answers.similarExp.label) || '';
   const similarText = (answers.similarExp && answers.similarExp.text) || '';
   const allScene = sceneWhenLabel.includes('ぜんぶ') || sceneWhenLabel.includes('全体');
+  // sceneReasonラベルを「なぜなら〜から」の形に変換
+  function normalizeSceneReason(label) {
+    if (!label) return low ? 'しゅじんこうのきもちがよくつたわってきたから' : '主人公の気持ちがとても伝わってきたから';
+    if (label.includes('かわいそう') || label.includes('苦しさ')) return low ? 'しゅじんこうがかわいそうで、きもちがつたわってきたから' : '主人公の苦しさや辛さが伝わってきたから';
+    if (label.includes('かっこよかった') || label.includes('行動がかっこ')) return low ? 'しゅじんこうのこうどうがかっこよくて、すごいとおもったから' : '主人公の行動がかっこよく、憧れを感じたから';
+    if (label.includes('自分と似て') || label.includes('じぶんとにて') || label.includes('経験と重な')) return low ? 'じぶんとにたようなけいけんがあって、きもちがよくわかったから' : '自分の経験と重なる部分があり、気持ちがよく分かったから';
+    if (label.includes('予想') || label.includes('よそう')) return low ? 'よそうとちがうことがおきて、びっくりしたから' : '予想と違う展開があり、強く印象に残ったから';
+    if (label.includes('気持ちがよく') || label.includes('きもちがよく') || label.includes('感情がリアル')) return low ? 'しゅじんこうのきもちがよくわかって、いっしょにかんじることができたから' : '主人公の感情がリアルに伝わり、一緒に感じることができたから';
+    return low ? 'しゅじんこうのきもちがよくつたわってきたから' : '主人公の気持ちがとても伝わってきたから';
+  }
   let block3 = '';
   if (low) {
     block3 = allScene
       ? `このお話はどのばめんもこころにのこりました。よんでいて、${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `いちばんこころにのこったのは、${sceneWhenLabel}のばめんです。そのばめんでは、${normalizeFeeling(sceneFeelLabel)}なりました。`;
-    block3 += `なぜそんなきもちになったかというと、しゅじんこうのきもちがよくつたわってきたからです。もし自分がそのばにいたら、おなじきもちになっていたとおもいます。`;
+    block3 += `なぜそんなきもちになったかというと、${normalizeSceneReason(sceneReasonLabel)}です。`;
     if (similarText) block3 += `じぶんにも「${similarText}」というけいけんがあって、しゅじんこうのきもちがよくわかりました。`;
     else if (!similarLabel.includes('ない')) block3 += `じぶんにも似たようなけいけんがあったので、しゅじんこうのきもちがさらによくわかりました。`;
   } else if (high) {
     block3 = allScene
       ? `この物語は全体を通して印象に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `最も印象に残ったのは${sceneWhenLabel}の場面で、${normalizeFeeling(sceneFeelLabel)}なりました。`;
-    block3 += `なぜそのような感情を抱いたかというと、主人公の心情描写が細やかで、読んでいる自分もその場に引き込まれていくような感覚があったからです。自分がその立場だったらどう行動するかを自然と考えていました。`;
+    block3 += `なぜそのような感情を抱いたかというと、${normalizeSceneReason(sceneReasonLabel)}からです。`;
     if (similarText) block3 += `自分自身も「${similarText}」という経験があり、主人公の気持ちがとてもよく分かりました。`;
     else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があり、主人公の気持ちが深く伝わってきました。`;
   } else {
     block3 = allScene
       ? `この物語は全体的に心に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `最も心に残ったのは、${sceneWhenLabel}の場面です。その場面では、${normalizeFeeling(sceneFeelLabel)}なりました。`;
-    block3 += `なぜそのような気持ちになったかというと、主人公の行動や気持ちがとても伝わってきたからです。もし自分がその場にいたとしたら、同じように感じていたと思います。`;
+    block3 += `なぜそのような気持ちになったかというと、${normalizeSceneReason(sceneReasonLabel)}からです。`;
     if (similarText) block3 += `自分にも「${similarText}」という経験があり、主人公の気持ちがよく分かりました。`;
     else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があって、主人公の気持ちがより一層伝わってきました。`;
   }
 
-  // これから・すすめたい人 → block4
+  // これから・すすめたい人・主人公の印象的な行動 → block4
   const futureLabel = (answers.future && answers.future.label) || '';
   const recommendLabel = (answers.recommend && answers.recommend.label) || '';
+  const charActionLabel = (answers.charAction && answers.charAction.label) || '';
   const futureText = normalizeFuture(futureLabel);
+  // charActionラベルを「主人公が〜のを見て」の形に変換
+  function normalizeCharAction(label) {
+    if (!label) return low ? 'しゅじんこうをみていて' : '主人公の姿を読んで';
+    if (label.includes('あきらめず') || label.includes('諦めず') || label.includes('挑戦し続け')) return low ? 'しゅじんこうがあきらめずにつづけるすがたをみて' : '主人公が諦めずに挑戦し続ける姿を読んで';
+    if (label.includes('誰かのため') || label.includes('だれかのため') || label.includes('犠牲')) return low ? 'しゅじんこうがだれかのためにうごくすがたをみて' : '主人公が誰かのために行動する姿を読んで';
+    if (label.includes('気持ちを伝え') || label.includes('きもちをつたえ') || label.includes('正直に')) return low ? 'しゅじんこうがじぶんのきもちをつたえようとするすがたをみて' : '主人公が正直に自分の気持ちを伝えようとする姿を読んで';
+    if (label.includes('勇気') || label.includes('ゆうき') || label.includes('恐れを乗り越え')) return low ? 'しゅじんこうがゆうきをだしてこうどうするすがたをみて' : '主人公が勇気をもって行動する姿を読んで';
+    if (label.includes('間違い') || label.includes('まちがい') || label.includes('謝') || label.includes('あやまっ') || label.includes('反省')) return low ? 'しゅじんこうがまちがいをみとめてあやまるすがたをみて' : '主人公が非を認めて謝る姿を読んで';
+    return low ? 'しゅじんこうをみていて' : '主人公の姿を読んで';
+  }
   let block4 = '';
   if (low) {
-    block4 = `この本をよんで、${futureText}。なぜなら、この本のしゅじんこうをみて、じぶんもそうしたいとおもったからです。この本をよんでよかったとおもいます。いろいろなことをかんがえるきっかけになりました。`;
+    block4 = `この本をよんで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、じぶんもそうしたいとつよくおもったからです。この本をよんでよかったとおもいます。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
       block4 += `${who}にも、ぜひよんでほしいとおもいます。きっとたのしんでよめるとおもいます。`;
     }
   } else if (high) {
-    block4 = `この本を読んで、${futureText}。なぜなら、主人公の経験から、自分の行動や考え方を見直すきっかけをもらったからです。この本を読んで、本当によかったと感じています。普段はあまり意識しないようなことを深く考えさせてくれる作品でした。`;
+    block4 = `この本を読んで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、自分の行動や考え方を見直すきっかけをもらったからです。この本を読んで、本当によかったと感じています。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
       block4 += `ぜひ${who}にも読んでほしいと思います。きっと多くのことを感じ取れる作品だと思います。`;
     }
   } else {
-    block4 = `この本を読んで、${futureText}。なぜなら、主人公の行動や気持ちを読んで、自分もそうしたいと強く思ったからです。この本を読んで本当によかったと思います。今まであまり考えていなかったことについて、深く考えるきっかけになりました。`;
+    block4 = `この本を読んで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、自分もそうしたいと強く思ったからです。この本を読んで本当によかったと思います。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
       block4 += `ぜひ${who}にも読んでもらいたいと思います。きっと何か大切なことが伝わると思います。`;
@@ -837,6 +886,34 @@ const STEPS = [
           ],
         }
       },
+      {
+        id: 'charChallenge', emoji: '💪',
+        text: { low: 'しゅじんこうが一番がんばっていたことは？', mid: '主人公が一番頑張っていたことは？', high: '主人公が最も苦労・努力していたことは？' },
+        voice: { low: 'しゅじんこうが一番がんばっていたことを えらんでね', mid: '主人公が一番頑張っていたことを選んでね', high: '主人公が最も苦労・努力していたことを選んでね' },
+        options: {
+          low: [
+            {label:'ともだちとのけんかやなかなおり',emoji:'🤝'},
+            {label:'むずかしいもくひょうへのちょうせん',emoji:'🎯'},
+            {label:'かなしいできごとをのりこえること',emoji:'😭'},
+            {label:'こわいものやこんなんへの立ち向かい',emoji:'⚔️'},
+            {label:'じぶんのきもちをつたえること',emoji:'💬'},
+          ],
+          mid: [
+            {label:'友だちとのけんか・仲直り',emoji:'🤝'},
+            {label:'難しい目標への挑戦',emoji:'🎯'},
+            {label:'悲しい出来事を乗り越えること',emoji:'😭'},
+            {label:'怖いもの・困難への立ち向かい',emoji:'⚔️'},
+            {label:'自分の気持ちを伝えること',emoji:'💬'},
+          ],
+          high: [
+            {label:'人間関係の葛藤・仲直り',emoji:'🤝'},
+            {label:'高い目標への挑戦',emoji:'🎯'},
+            {label:'喪失・悲しみを乗り越えること',emoji:'😭'},
+            {label:'恐怖・困難への立ち向かい',emoji:'⚔️'},
+            {label:'自分の思いを伝え・表現すること',emoji:'💬'},
+          ],
+        }
+      },
     ]
   },
   {
@@ -922,6 +999,34 @@ const STEPS = [
         },
         otherInputLabel: { low: 'どんなけいけん？（みじかくでいいよ）', mid: 'どんな経験か書いてね（短くでOK）', high: 'どのような経験か書いてね' }
       },
+      {
+        id: 'sceneReason', emoji: '💡',
+        text: { low: 'なぜその場面がこころに残った？', mid: 'なぜその場面が心に残った？', high: 'なぜその場面が特に印象に残ったの？' },
+        voice: { low: 'なぜその場面がこころに残ったか えらんでね', mid: 'なぜその場面が心に残ったか選んでね', high: 'なぜその場面が印象に残ったか選んでね' },
+        options: {
+          low: [
+            {label:'しゅじんこうがかわいそうだったから',emoji:'😢'},
+            {label:'しゅじんこうがかっこよかったから',emoji:'✨'},
+            {label:'じぶんとにていたから',emoji:'🪞'},
+            {label:'よそうとちがうことがおきたから',emoji:'😮'},
+            {label:'しゅじんこうのきもちがよくわかったから',emoji:'💖'},
+          ],
+          mid: [
+            {label:'主人公がかわいそうだったから',emoji:'😢'},
+            {label:'主人公がかっこよかったから',emoji:'✨'},
+            {label:'自分と似ていたから',emoji:'🪞'},
+            {label:'予想と違うことが起きたから',emoji:'😮'},
+            {label:'主人公の気持ちがよく分かったから',emoji:'💖'},
+          ],
+          high: [
+            {label:'主人公の苦しさが伝わってきたから',emoji:'😢'},
+            {label:'主人公の行動がかっこよかったから',emoji:'✨'},
+            {label:'自分の経験と重なったから',emoji:'🪞'},
+            {label:'予想外の展開だったから',emoji:'😮'},
+            {label:'主人公の感情がリアルに伝わってきたから',emoji:'💖'},
+          ],
+        }
+      },
     ]
   },
   {
@@ -984,6 +1089,34 @@ const STEPS = [
           ],
         }
       },
+      {
+        id: 'charAction', emoji: '⭐',
+        text: { low: 'しゅじんこうのどんなこうどうがいんしょうにのこった？', mid: '主人公のどんな行動が印象に残った？', high: '主人公のどの行動・場面が最も印象的だった？' },
+        voice: { low: 'しゅじんこうのどんなこうどうがいんしょうにのこったか えらんでね', mid: '主人公のどんな行動が印象に残ったか選んでね', high: '主人公のどの行動が最も印象的だったか選んでね' },
+        options: {
+          low: [
+            {label:'あきらめずにつづけたこと',emoji:'🔥'},
+            {label:'だれかのためにうごいたこと',emoji:'🫂'},
+            {label:'じぶんのきもちをつたえたこと',emoji:'💬'},
+            {label:'ゆうきをだしたこと',emoji:'⚡'},
+            {label:'まちがいをみとめてあやまったこと',emoji:'🙏'},
+          ],
+          mid: [
+            {label:'あきらめずに続けたこと',emoji:'🔥'},
+            {label:'誰かのために動いたこと',emoji:'🫂'},
+            {label:'自分の気持ちを伝えたこと',emoji:'💬'},
+            {label:'勇気を出したこと',emoji:'⚡'},
+            {label:'間違いを認めて謝ったこと',emoji:'🙏'},
+          ],
+          high: [
+            {label:'諦めずに挑戦し続けたこと',emoji:'🔥'},
+            {label:'他者のために自分を犠牲にしたこと',emoji:'🫂'},
+            {label:'正直に自分の気持ちを伝えたこと',emoji:'💬'},
+            {label:'恐れを乗り越えて行動したこと',emoji:'⚡'},
+            {label:'非を認めて謝罪・反省したこと',emoji:'🙏'},
+          ],
+        }
+      },
     ]
   },
   {
@@ -1018,6 +1151,34 @@ const STEPS = [
             {label:'先生・家族・友人にすすめられた',emoji:'👋'},
             {label:'授業・学校のきっかけで知った',emoji:'🏫'},
             {label:'以前から気になっていた',emoji:'🌙'},
+          ],
+        }
+      },
+      {
+        id: 'readImpression', emoji: '📝',
+        text: { low: 'よんでみてどうだった？', mid: '読んでみてどうだった？', high: '実際に読んでみて、どう感じた？' },
+        voice: { low: 'よんでみてどうだったか えらんでね', mid: '読んでみてどうだったか選んでね', high: '実際に読んでみてどう感じたか選んでね' },
+        options: {
+          low: [
+            {label:'すぐにはまってよめた！',emoji:'😆'},
+            {label:'ゆっくりたのしんでよめた',emoji:'😊'},
+            {label:'むずかしいところもあったけどよかった',emoji:'🤔'},
+            {label:'きたいしていたよりもっとよかった！',emoji:'🤩'},
+            {label:'よみおわってすっきりした',emoji:'😌'},
+          ],
+          mid: [
+            {label:'すぐにはまって読めた！',emoji:'😆'},
+            {label:'ゆっくり楽しんで読めた',emoji:'😊'},
+            {label:'難しいところもあったけどよかった',emoji:'🤔'},
+            {label:'期待していたよりもっとよかった！',emoji:'🤩'},
+            {label:'読み終わってすっきりした',emoji:'😌'},
+          ],
+          high: [
+            {label:'一気に読み進めてしまった',emoji:'😆'},
+            {label:'じっくり味わいながら読んだ',emoji:'😊'},
+            {label:'難しい内容もあったが読みごたえがあった',emoji:'🤔'},
+            {label:'期待以上の内容だった',emoji:'🤩'},
+            {label:'読み終えて充実感・達成感があった',emoji:'😌'},
           ],
         }
       },
@@ -1261,24 +1422,29 @@ async function generateResult() {
 
 【本のタイトル】${answers.title}
 【学年】${answers.grade}
+【この本を選んだ理由】${answerText('reason')}
+【読んでみた感想・印象】${answerText('readImpression')}
 【お話のジャンル】${answerText('genre')}
 【主人公のタイプ】${answerText('mainChar')}
 【物語の結末】${answerText('ending')}
+【主人公が一番頑張っていたこと】${answerText('charChallenge')}
 【心に残った場面の位置】${answerText('sceneWhen')}
 【その場面の気持ち】${answerText('sceneFeel')}
+【その場面が心に残った理由】${answerText('sceneReason')}
 【自分の似た経験】${answerText('similarExp')}
 【これからしたいこと】${answerText('future')}
+【主人公の印象的な行動】${answerText('charAction')}
 【すすめたい人】${answerText('recommend')}
-【この本を選んだ理由】${answerText('reason')}
 
 以下の条件で書いてください：
 - ${grade}らしい、自然でやさしい言葉遣いで書く
 - 文章の文法を正しくし、子どもの回答（選択肢）を文中に自然な日本語として組み込む（例：「悲しかった・泣きそうになった」→「悲しくて泣きそうになりました」のように文として自然に変換する）
+- 【重要】子どもが選択・入力していない内容は勝手に作らない。必ず上記の回答欄にある情報だけをもとに書く
 - 【漢字ルール・必ず守ること】学習指導要領に基づき、${gradeNum === 1 ? `1年生配当の80字（一二三四五六七八九十百千上下左右中大小月日年早木林山川土空花草虫犬人名女男子目口手足見音力気円入出立休先生学校）のみ使用し、それ以外は全てひらがな` : `${gradeNum - 1}年生までに習う配当漢字（累積）のみ使用し、それ以外は全てひらがな。${gradeNum === 2 ? '例：「本→ほん」「読む→よむ」「書く→かく」「語→ご」（2年生配当）はひらがな' : gradeNum === 3 ? '例：「物語→ものがたり」「主人公→しゅじんこう」「場面→ばめん」「感動→かんどう」（3年生以降の配当）はひらがな' : gradeNum === 4 ? '例：「場面」「主人公」（3年生配当）は使用可。「感動→かんどう」「想像→そうぞう」（4年生配当）はひらがな' : gradeNum === 5 ? '例：「感動」「想像」（4年生配当）は使用可。「感謝→かんしゃ」「経験→けいけん」「複雑→ふくざつ」（5年生配当）はひらがな' : '例：「感謝」「経験」（5年生配当）は使用可。「責任→せきにん」「存在→そんざい」「演じる→えんじる」（6年生配当）はひらがな'}`}
 - 子ども自身が書いたような自然な文体で
 - 各ブロック5〜8文程度で、内容を充実させる
 - 各ブロックで「なぜそう思ったのか」「なぜそう感じたのか」という理由も必ず書く（例：「なぜなら〜だからです」「その理由は〜です」など）
-- 書き出しには読む前の期待感も書く。あらすじには主人公の行動の特徴も加える。心に残った場面には感情の理由と自分の想像も書く。まとめには読んでよかった理由も書く
+- 書き出しは「この本を選んだ理由」と「読んでみた感想・印象」を使う。あらすじは「主人公のタイプ」と「一番頑張っていたこと」を使う。心に残った場面は「その場面の気持ち」と「心に残った理由」を使う。まとめは「主人公の印象的な行動」と「これからしたいこと」を使う
 
 必ず以下のJSON形式だけで返してください（他のテキスト不要）:
 {
