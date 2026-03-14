@@ -485,6 +485,76 @@ header p {
 .char-count-bar-wrap { background: #d4edda; border-radius: 10px; height: 12px; margin: 8px 0; overflow: hidden; }
 .char-count-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), #3da862); border-radius: 10px; transition: width 0.6s ease; }
 .char-count-hint { font-size: 0.88rem; color: var(--text); margin-top: 8px; line-height: 1.5; }
+
+/* ===== FEATURE 1: DEEP-DIVE FOLLOWUP ===== */
+.followup-area {
+  margin-top: 10px; padding: 11px 12px;
+  background: linear-gradient(135deg, #fffbf0, #fff9e6);
+  border: 2px solid var(--yellow); border-radius: 12px;
+  animation: slideUp 0.3s ease;
+}
+.followup-bubble { font-size: 0.82rem; font-weight: 700; color: #7a5c00; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.followup-opts { display: flex; flex-direction: column; gap: 5px; }
+.followup-opt {
+  display: flex; align-items: center; gap: 8px; background: white;
+  border: 2px solid #f0d878; border-radius: 10px;
+  padding: 7px 10px; cursor: pointer; font-size: 0.82rem; transition: all 0.15s;
+}
+.followup-opt:hover { border-color: var(--orange); background: #fff3e6; }
+.followup-opt.selected { border-color: var(--orange); background: #fff3e6; font-weight: 700; }
+.followup-input {
+  width: 100%; padding: 8px 11px; border: 2px solid #f0d878; border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif; font-size: 0.82rem; outline: none; background: white;
+}
+.followup-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,140,66,0.1); }
+
+/* ===== FEATURE 2: VOCAB BOOST ===== */
+.vocab-hint {
+  border-bottom: 2px dashed var(--orange); cursor: pointer;
+  color: var(--orange); border-radius: 2px; transition: background 0.15s;
+}
+.vocab-hint:hover, .vocab-hint:active { background: #fff3e6; }
+.vocab-popup {
+  position: fixed; background: white; border: 2.5px solid var(--orange);
+  border-radius: 14px; padding: 12px 14px;
+  box-shadow: 0 8px 32px rgba(255,140,66,0.25);
+  z-index: 200; min-width: 200px; max-width: 280px; display: none;
+}
+.vocab-popup.show { display: block; animation: slideUp 0.2s ease; }
+.vocab-popup-title { font-size: 0.75rem; font-weight: 700; color: var(--text-light); margin-bottom: 8px; }
+.vocab-alt {
+  display: block; width: 100%; text-align: left;
+  background: #f8fbff; border: 2px solid #dce8f5; border-radius: 8px;
+  padding: 7px 11px; font-size: 0.85rem; cursor: pointer; margin-bottom: 5px;
+  font-family: 'Noto Sans JP', sans-serif; transition: all 0.15s;
+}
+.vocab-alt:hover { border-color: var(--orange); background: #fff3e6; }
+.vocab-alt:last-child { margin-bottom: 0; }
+
+/* ===== FEATURE 3: STRUCTURE OUTLINE ===== */
+.outline-block {
+  background: linear-gradient(135deg, #f0f9ff, #e8f4ff);
+  border: 2px solid var(--blue); border-radius: var(--radius);
+  padding: 16px 18px; margin-bottom: 14px;
+}
+.outline-title { font-family: 'Mochiy Pop One', sans-serif; font-size: 0.95rem; color: var(--blue-dark); margin-bottom: 4px; }
+.outline-note { font-size: 0.8rem; color: var(--text-light); margin-bottom: 12px; line-height: 1.5; }
+.outline-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 7px 0; border-bottom: 1px solid #dce8f5; font-size: 0.875rem; line-height: 1.5;
+}
+.outline-item:last-child { border-bottom: none; }
+.outline-item-label { font-size: 0.75rem; font-weight: 700; color: var(--blue-dark); min-width: 80px; flex-shrink: 0; padding-top: 2px; }
+.outline-item-value { color: var(--text); flex: 1; }
+.btn-show-draft {
+  width: 100%; margin-top: 14px; padding: 13px;
+  background: linear-gradient(135deg, var(--yellow), var(--orange));
+  color: white; border: none; border-radius: 14px;
+  font-family: 'Mochiy Pop One', sans-serif; font-size: 1rem;
+  cursor: pointer; box-shadow: 0 4px 16px rgba(255,140,66,0.35); transition: all 0.2s;
+}
+.btn-show-draft:hover { transform: translateY(-2px); }
+#fullDraftSection { display: none; animation: slideUp 0.4s ease; }
 </style>
 </head>
 <body>
@@ -516,6 +586,7 @@ header p {
 <div class="steps-row" id="stepsRow"></div>
 <div class="main"><div class="card" id="mainCard"></div></div>
 <div class="toast" id="toast">📋 コピーしました！</div>
+<div class="vocab-popup" id="vocabPopup"></div>
 
 <script>
 /* ===== CHARACTER IMAGES ===== */
@@ -1295,6 +1366,79 @@ const STEPS = [
 
 const STEP_EMOJIS = ['📖','📚','💬','🌱','🤔','🎉'];
 
+/* ===== FEATURE 1: DEEP-DIVE FOLLOWUP MAP ===== */
+const FOLLOWUP_MAP = {
+  // sceneReason: 「自分と似ていたから」系
+  'sceneReason_じぶんとにていたから': {
+    type: 'text',
+    question: { low: 'どんな場面に似てたの？（みじかくでいいよ）', mid: 'どんな場面と似てた？（短くでOK）', high: 'どのような場面と重なった？' }
+  },
+  'sceneReason_自分と似ていたから': {
+    type: 'text',
+    question: { low: 'どんな場面に似てたの？（みじかくでいいよ）', mid: 'どんな場面と似てた？（短くでOK）', high: 'どのような場面と重なった？' }
+  },
+  'sceneReason_自分の経験と重なったから': {
+    type: 'text',
+    question: { low: 'どんな場面に似てたの？（みじかくでいいよ）', mid: 'どんな場面と似てた？（短くでOK）', high: 'どのような場面と重なった？' }
+  },
+  // charAction: 「勇気を出したこと」系
+  'charAction_ゆうきをだしたこと': {
+    type: 'choices',
+    question: { low: 'もし同じ立場だったら、ゆうきが出せそう？', mid: '同じ立場だったら勇気が出せそう？', high: '同じ立場なら、その勇気は出せそうかな？' },
+    options: {
+      low:  [{label:'出せると思う！',emoji:'💪'},{label:'うーん、むずかしいかも',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+      mid:  [{label:'出せると思う！',emoji:'💪'},{label:'難しそうかも…',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+      high: [{label:'出せると思う！',emoji:'💪'},{label:'出せるかもしれない',emoji:'🤔'},{label:'難しいかもしれない',emoji:'🌀'}],
+    }
+  },
+  'charAction_勇気を出したこと': {
+    type: 'choices',
+    question: { low: 'もし同じ立場だったら、ゆうきが出せそう？', mid: '同じ立場だったら勇気が出せそう？', high: '同じ立場なら、その勇気は出せそうかな？' },
+    options: {
+      low:  [{label:'出せると思う！',emoji:'💪'},{label:'うーん、むずかしいかも',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+      mid:  [{label:'出せると思う！',emoji:'💪'},{label:'難しそうかも…',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+      high: [{label:'出せると思う！',emoji:'💪'},{label:'出せるかもしれない',emoji:'🤔'},{label:'難しいかもしれない',emoji:'🌀'}],
+    }
+  },
+  'charAction_恐れを乗り越えて行動したこと': {
+    type: 'choices',
+    question: { low: 'もし同じ立場だったら、ゆうきが出せそう？', mid: '同じ立場だったら勇気が出せそう？', high: '同じ立場なら、その勇気は出せそうかな？' },
+    options: {
+      low:  [{label:'出せると思う！',emoji:'💪'},{label:'うーん、むずかしいかも',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+      mid:  [{label:'出せると思う！',emoji:'💪'},{label:'難しそうかも…',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+      high: [{label:'出せると思う！',emoji:'💪'},{label:'出せるかもしれない',emoji:'🤔'},{label:'難しいかもしれない',emoji:'🌀'}],
+    }
+  },
+};
+
+/* ===== FEATURE 2: VOCAB BOOST MAPS ===== */
+const VOCAB_MAP_LOW = [
+  { word: 'すごかった',     alts: ['とても印象的だった', 'おどろいた',         'こころをうごかされた'] },
+  { word: 'かなしかった',   alts: ['きゅんとした',       'むねがしめつけられた','やりきれなかった']    },
+  { word: 'おもしろかった', alts: ['むちゅうになった',   'ひきこまれた',        'わくわくした']        },
+  { word: 'うれしかった',   alts: ['むねがあたたかくなった','よろこびがあふれた','こころがはずんだ']   },
+  { word: 'かわいそう',     alts: ['むねがいたくなった', 'きゅんとした',        'つらいきもちになった']},
+  { word: 'びっくりした',   alts: ['とてもおどろいた',   'よそうがはずれた',    'めをうたがった']      },
+];
+const VOCAB_MAP_MID = [
+  { word: 'すごかった',   alts: ['とても印象的だった', '心を動かされた',     '驚かされた']         },
+  { word: '悲しかった',   alts: ['切ない気持ちになった','胸が締め付けられた', 'やりきれなかった']   },
+  { word: '面白かった',   alts: ['夢中になった',       '引き込まれた',       '胸が踊った']         },
+  { word: 'うれしかった', alts: ['胸が温かくなった',   '喜びがあふれた',     '心が弾んだ']         },
+  { word: 'かわいそう',   alts: ['胸が痛くなった',     '切なくなった',       'つらくなった']       },
+  { word: 'びっくりした', alts: ['とても驚いた',       '驚きを隠せなかった', '予想外だった']       },
+  { word: 'すごく',       alts: ['とても',             '強く',               'たいへん']           },
+];
+const VOCAB_MAP_HIGH = [
+  { word: 'すごかった',   alts: ['とても印象的だった', '心を打たれた',       '感銘を受けた']       },
+  { word: '悲しかった',   alts: ['切ない気持ちになった','胸が締め付けられた', '胸にこたえた']       },
+  { word: '面白かった',   alts: ['夢中になった',       '引き込まれた',       '興味深かった']       },
+  { word: 'うれしかった', alts: ['心が温まった',       '喜びが溢れた',       '心が弾んだ']         },
+  { word: 'かわいそう',   alts: ['胸が締め付けられた', '切ない思いになった', '同情した']           },
+  { word: 'びっくりした', alts: ['驚きを隠せなかった', '意表を突かれた',     '予想外だった']       },
+  { word: 'すごく',       alts: ['とても',             '非常に',             'たいへん']           },
+];
+
 /* ===== PROGRESS ===== */
 function updateProgress() {
   const pct = (currentStep / STEPS.length) * 100;
@@ -1416,6 +1560,7 @@ function renderChoiceStep(step) {
             value="${cur.text||''}"
             oninput="answers['${q.id}']={...answers['${q.id}'],text:this.value};validateChoices()">
         </div>
+        <div class="followup-area" id="followup_${q.id}" style="display:none"></div>
       </div>`;
   }).join('');
 
@@ -1458,7 +1603,51 @@ function selectOpt(qId, idx, label, showInput) {
     otherInput.classList.toggle('show', !!showInput);
     if (showInput) { otherInput.focus(); }
   }
+  // Deep-dive followup
+  const followupDef = FOLLOWUP_MAP[qId + '_' + label];
+  const followupArea = document.getElementById('followup_' + qId);
+  if (followupArea) {
+    if (followupDef) {
+      followupArea.innerHTML = renderFollowupHTML(qId, followupDef);
+      followupArea.style.display = 'block';
+    } else {
+      followupArea.innerHTML = '';
+      followupArea.style.display = 'none';
+      delete answers[qId + '_follow'];
+    }
+  }
   validateChoices();
+}
+
+function renderFollowupHTML(qId, def) {
+  const cat = gradeCat();
+  const question = def.question[cat] || def.question.mid;
+  if (def.type === 'text') {
+    const val = (answers[qId + '_follow'] && answers[qId + '_follow'].text) || '';
+    return `<div class="followup-bubble">🤔 ${question}</div>
+      <input class="followup-input" placeholder="${cat==='low'?'みじかくでいいよ…':'短くでOK…'}"
+        value="${val.replace(/"/g, '&quot;')}"
+        oninput="answers['${qId}_follow']={text:this.value}">`;
+  }
+  if (def.type === 'choices') {
+    const opts = def.options[cat] || def.options.mid;
+    const cur = (answers[qId + '_follow'] && answers[qId + '_follow'].label) || '';
+    return `<div class="followup-bubble">🤔 ${question}</div>
+      <div class="followup-opts">
+        ${opts.map(o => `
+          <div class="followup-opt${cur === o.label ? ' selected' : ''}"
+            onclick="selectFollowup('${qId}','${o.label.replace(/'/g,"\\'").replace(/"/g,'&quot;')}',this)">
+            <span>${o.emoji}</span><span>${o.label}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+  return '';
+}
+
+function selectFollowup(qId, label, el) {
+  answers[qId + '_follow'] = { label };
+  const area = document.getElementById('followup_' + qId);
+  if (area) area.querySelectorAll('.followup-opt').forEach(opt => opt.classList.toggle('selected', opt === el));
 }
 
 function validateChoices() {
@@ -1569,7 +1758,7 @@ async function generateResult() {
 【自分の似た経験】${answerText('similarExp')}
 【これからしたいこと】${answerText('future')}
 【主人公の印象的な行動】${answerText('charAction')}
-【すすめたい人】${answerText('recommend')}
+【すすめたい人】${answerText('recommend')}${answers['sceneReason_follow'] && answers['sceneReason_follow'].text ? `\n【場面との共通点（深掘り）】${answers['sceneReason_follow'].text}` : ''}${answers['charAction_follow'] && answers['charAction_follow'].label ? `\n【同じ立場だったら？（深掘り）】${answers['charAction_follow'].label}` : ''}
 
 以下の条件で書いてください：
 - ${grade}らしい、自然でやさしい言葉遣いで書く
@@ -1644,6 +1833,35 @@ function speakBlocks(texts) {
   next();
 }
 
+/* ===== FEATURE 3: STRUCTURE OUTLINE ===== */
+function buildOutlineItems(cat) {
+  const title = answers.title || '';
+  const reasonLabel   = (answers.reason        && answers.reason.label)        || '';
+  const readLabel     = (answers.readImpression && answers.readImpression.label)|| '';
+  const genreLabel    = (answers.genre          && answers.genre.label)         || '';
+  const charLabel     = (answers.mainChar       && answers.mainChar.label)      || '';
+  const endLabel      = (answers.ending         && answers.ending.label)        || '';
+  const sceneWhen     = (answers.sceneWhen      && answers.sceneWhen.label)     || '';
+  const sceneFeel     = (answers.sceneFeel      && answers.sceneFeel.label)     || '';
+  const sceneReason   = (answers.sceneReason    && answers.sceneReason.label)   || '';
+  const charAction    = (answers.charAction     && answers.charAction.label)    || '';
+  const futureLabel   = (answers.future         && answers.future.label)        || '';
+  if (cat === 'low') {
+    return [
+      { icon:'📝', label:'書き出し',       value:`「${title}」を選んだのは「${reasonLabel}」。読んで「${readLabel}」。` },
+      { icon:'📖', label:'あらすじ',       value:`「${genreLabel}」のお話で、しゅじんこうは「${charLabel}」。おわりは「${endLabel}」。` },
+      { icon:'💬', label:'こころに残った', value:`「${sceneWhen}」のばめんで「${sceneFeel}」になった。なぜなら「${sceneReason}」。` },
+      { icon:'🌱', label:'まとめ',         value:`しゅじんこうの「${charAction}」が心に残った。これからは「${futureLabel}」。` },
+    ];
+  }
+  return [
+    { icon:'📝', label:'書き出し',     value:`「${title}」を選んだのは「${reasonLabel}」。読んで「${readLabel}」。` },
+    { icon:'📖', label:'あらすじ',     value:`「${genreLabel}」のお話で、主人公は「${charLabel}」。結末は「${endLabel}」。` },
+    { icon:'💬', label:'心に残った場面', value:`「${sceneWhen}」の場面で「${sceneFeel}」になった。理由は「${sceneReason}」。` },
+    { icon:'🌱', label:'まとめ',       value:`主人公の「${charAction}」が印象的。これからは「${futureLabel}」。` },
+  ];
+}
+
 /* ===== RESULT ===== */
 function renderResult(data) {
   const blocks = [
@@ -1663,6 +1881,8 @@ function renderResult(data) {
     ? 'これをさんこうにかいてみてね！'
     : 'これを参考に、肉付けして書いてみてね！';
 
+  const outlineItems = buildOutlineItems(cat);
+
   document.getElementById('mainCard').innerHTML = `
     <div class="char-row">
       ${getCharImg('end')}
@@ -1675,29 +1895,53 @@ function renderResult(data) {
       <div class="result-emoji">🎉</div>
       <div class="result-title">下書きメモができたよ！</div>
     </div>
-    <button class="btn-read-all" onclick="speakAllBlocks()">🔊 ${cat==='low'?'ぜんぶよむ':'全部読む'}</button>
-    ${blocks.map(b=>`
-      <div class="section-block">
-        <div class="section-label">
-          <span>${b.label}</span>
-          <button class="section-voice" onclick="speakBlock('${b.key}')">🔊</button>
-        </div>
-        <div class="section-content">${data[b.key]||''}</div>
-      </div>`).join('')}
-    <div class="char-count-display">
-      <div class="char-count-nums">
-        <span class="char-count-current">${totalChars}字</span>
-        <span class="char-count-sep"> / </span>
-        <span class="char-count-target">目標 ${targetChars}字</span>
+    <div class="outline-block">
+      <div class="outline-title">📋 ${cat==='low'?'君のかんそうの「ほねぐみ」':'君の感想の「骨組み」'}</div>
+      <p class="outline-note">${cat==='low'?'ここにないことを足して、もっとくわしく書いてみてね！':'これをもとに、自分の言葉で肉付けしてみてね！'}</p>
+      <div class="outline-items">
+        ${outlineItems.map(item=>`
+          <div class="outline-item">
+            <span class="outline-item-label">${item.icon} ${item.label}</span>
+            <span class="outline-item-value">${item.value}</span>
+          </div>`).join('')}
       </div>
-      <div class="char-count-bar-wrap">
-        <div class="char-count-bar-fill" style="width:${pct}%"></div>
-      </div>
-      <p class="char-count-hint">${charHint}</p>
+      <button class="btn-show-draft" onclick="showFullDraft()">✨ ${cat==='low'?'下書きをみる！':'下書きを見る！'}</button>
     </div>
-    <button class="btn-copy" onclick="copyAll()">📋 ${cat==='low'?'ぜんぶコピーする':'全部コピーする'}</button>
-    <button class="btn-restart" onclick="restart()">🔄 ${cat==='low'?'もう一さつやってみる':'もう一冊やってみる'}</button>`;
+    <div id="fullDraftSection">
+      <button class="btn-read-all" onclick="speakAllBlocks()">🔊 ${cat==='low'?'ぜんぶよむ':'全部読む'}</button>
+      ${blocks.map(b=>`
+        <div class="section-block">
+          <div class="section-label">
+            <span>${b.label}</span>
+            <button class="section-voice" onclick="speakBlock('${b.key}')">🔊</button>
+          </div>
+          <div class="section-content">${data[b.key]||''}</div>
+        </div>`).join('')}
+      <div class="char-count-display">
+        <div class="char-count-nums">
+          <span class="char-count-current">${totalChars}字</span>
+          <span class="char-count-sep"> / </span>
+          <span class="char-count-target">目標 ${targetChars}字</span>
+        </div>
+        <div class="char-count-bar-wrap">
+          <div class="char-count-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <p class="char-count-hint">${charHint}</p>
+      </div>
+      <button class="btn-copy" onclick="copyAll()">📋 ${cat==='low'?'ぜんぶコピーする':'全部コピーする'}</button>
+      <button class="btn-restart" onclick="restart()">🔄 ${cat==='low'?'もう一さつやってみる':'もう一冊やってみる'}</button>
+    </div>`;
   speak(doneMsg);
+}
+
+function showFullDraft() {
+  const section = document.getElementById('fullDraftSection');
+  if (!section) return;
+  section.style.display = 'block';
+  const btn = document.querySelector('.btn-show-draft');
+  if (btn) btn.style.display = 'none';
+  applyVocabHints();
+  setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
 
 function copyAll() {
@@ -1718,6 +1962,60 @@ function restart() {
   renderStep();
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+/* ===== FEATURE 2: VOCAB BOOST FUNCTIONS ===== */
+function escapeForRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function applyVocabHints() {
+  const cat = gradeCat();
+  const map = cat === 'low' ? VOCAB_MAP_LOW : cat === 'high' ? VOCAB_MAP_HIGH : VOCAB_MAP_MID;
+  document.querySelectorAll('.section-content').forEach(el => {
+    let html = el.innerHTML;
+    map.forEach(({ word, alts }) => {
+      const altsAttr = alts.join('||').replace(/"/g, '&quot;');
+      html = html.replace(new RegExp(escapeForRegex(word), 'g'),
+        `<span class="vocab-hint" data-alts="${altsAttr}" onclick="showVocabPopup(event,this)">${word}</span>`);
+    });
+    el.innerHTML = html;
+  });
+}
+
+let vocabTarget = null;
+function showVocabPopup(event, el) {
+  event.stopPropagation();
+  const alts = el.dataset.alts.split('||');
+  const cat = gradeCat();
+  const popup = document.getElementById('vocabPopup');
+  popup.innerHTML = `
+    <div class="vocab-popup-title">🔤 ${cat==='low'?'もっといいことばに変えてみよう！':'もっといい言葉に変えてみよう！'}</div>
+    ${alts.map(a => `<button class="vocab-alt" onclick="replaceVocab(event,'${a.replace(/'/g,"\\'")}')">${a}</button>`).join('')}
+    <button class="vocab-alt" style="color:var(--text-light);font-size:0.8rem" onclick="hideVocabPopup(event)">${cat==='low'?'そのままでいい':'このままでいい'}</button>`;
+  const rect = el.getBoundingClientRect();
+  popup.style.top  = (rect.bottom + window.scrollY + 8) + 'px';
+  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 292)) + 'px';
+  popup.classList.add('show');
+  vocabTarget = el;
+}
+function hideVocabPopup(event) {
+  if (event) event.stopPropagation();
+  document.getElementById('vocabPopup').classList.remove('show');
+}
+function replaceVocab(event, newWord) {
+  event.stopPropagation();
+  if (vocabTarget) {
+    const span = document.createElement('span');
+    span.textContent = newWord;
+    span.style.color = 'var(--green)';
+    span.style.fontWeight = '700';
+    vocabTarget.replaceWith(span);
+    vocabTarget = null;
+  }
+  hideVocabPopup();
+}
+document.addEventListener('click', () => {
+  const popup = document.getElementById('vocabPopup');
+  if (popup) popup.classList.remove('show');
+});
 
 // どこかを触ると音声が止まる（ページ遷移時の自動音声・音声ボタン自体はtoggleSpeakで管理）
 document.addEventListener('touchstart', (e) => {
