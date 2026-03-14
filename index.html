@@ -585,15 +585,26 @@ function buildDemoResult() {
     else block1 = `わたしが「${title}」を選んだのは、内容に興味を持ったからです。`;
   }
 
+  // block1に読む前の期待感を追加
+  if (low) {
+    block1 += `この本がどんなお話かとても気になっていました。よみはじめると、すぐにお話のせかいにひきこまれていきました。`;
+  } else if (high) {
+    block1 += `読む前から、この本に対して強い期待と興味を持っていました。実際に読み始めると、その期待をはるかに上回る内容でした。`;
+  } else {
+    block1 += `読む前は、どんなお話かワクワクしながら期待していました。読み始めたら、すぐにお話の世界に引き込まれていきました。`;
+  }
+
   // ジャンル・主人公・結末 → block2
   const genreLabel = (answers.genre && answers.genre.label) || '';
   const charLabel = (answers.mainChar && answers.mainChar.label) || '';
   const endLabel = (answers.ending && answers.ending.label) || '';
   let block2 = '';
   if (low) {
-    block2 = `このお話は${genreLabel}です。主人公は${charLabel}で、${normalizeEnding(endLabel)}。`;
+    block2 = `このお話は${genreLabel}です。主人公は${charLabel}で、${normalizeEnding(endLabel)}。お話の中で、しゅじんこうはいろいろなことにぶつかりながらも、ぜんりょくでがんばっていました。そのすがたがとてもこころに残りました。`;
+  } else if (high) {
+    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。物語全体を通して、主人公の成長が丁寧に描かれており、読み応えのある作品でした。一つひとつの出来事が積み重なって、クライマックスへとつながっていきます。`;
   } else {
-    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。`;
+    block2 = `この物語は${genreLabel}で、主人公は${charLabel}です。${normalizeEnding(endLabel)}。物語の中で主人公はさまざまな困難に直面しながらも、一歩ずつ前に進んでいきます。その姿がとても印象的でした。`;
   }
 
   // 心に残った場面・気持ち・似た経験 → block3
@@ -607,20 +618,23 @@ function buildDemoResult() {
     block3 = allScene
       ? `このお話はどのばめんもこころにのこりました。よんでいて、${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `いちばんこころにのこったのは、${sceneWhenLabel}のばめんです。そのばめんでは、${normalizeFeeling(sceneFeelLabel)}なりました。`;
+    block3 += `なぜそんなきもちになったかというと、しゅじんこうのきもちがよくつたわってきたからです。もし自分がそのばにいたら、おなじきもちになっていたとおもいます。`;
     if (similarText) block3 += `じぶんにも「${similarText}」というけいけんがあって、しゅじんこうのきもちがよくわかりました。`;
-    else if (!similarLabel.includes('ない')) block3 += `じぶんにも似たようなけいけんがあったので、しゅじんこうのきもちがよくわかりました。`;
+    else if (!similarLabel.includes('ない')) block3 += `じぶんにも似たようなけいけんがあったので、しゅじんこうのきもちがさらによくわかりました。`;
   } else if (high) {
     block3 = allScene
       ? `この物語は全体を通して印象に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `最も印象に残ったのは${sceneWhenLabel}の場面で、${normalizeFeeling(sceneFeelLabel)}なりました。`;
+    block3 += `なぜそのような感情を抱いたかというと、主人公の心情描写が細やかで、読んでいる自分もその場に引き込まれていくような感覚があったからです。自分がその立場だったらどう行動するかを自然と考えていました。`;
     if (similarText) block3 += `自分自身も「${similarText}」という経験があり、主人公の気持ちがとてもよく分かりました。`;
     else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があり、主人公の気持ちが深く伝わってきました。`;
   } else {
     block3 = allScene
       ? `この物語は全体的に心に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `最も心に残ったのは、${sceneWhenLabel}の場面です。その場面では、${normalizeFeeling(sceneFeelLabel)}なりました。`;
+    block3 += `なぜそのような気持ちになったかというと、主人公の行動や気持ちがとても伝わってきたからです。もし自分がその場にいたとしたら、同じように感じていたと思います。`;
     if (similarText) block3 += `自分にも「${similarText}」という経験があり、主人公の気持ちがよく分かりました。`;
-    else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があって、主人公の気持ちが伝わってきました。`;
+    else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があって、主人公の気持ちがより一層伝わってきました。`;
   }
 
   // これから・すすめたい人 → block4
@@ -629,22 +643,22 @@ function buildDemoResult() {
   const futureText = normalizeFuture(futureLabel);
   let block4 = '';
   if (low) {
-    block4 = `この本をよんで、${futureText}。`;
+    block4 = `この本をよんで、${futureText}。なぜなら、この本のしゅじんこうをみて、じぶんもそうしたいとおもったからです。この本をよんでよかったとおもいます。いろいろなことをかんがえるきっかけになりました。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
-      block4 += `${who}にも、ぜひよんでほしいとおもいます。`;
+      block4 += `${who}にも、ぜひよんでほしいとおもいます。きっとたのしんでよめるとおもいます。`;
     }
   } else if (high) {
-    block4 = `この本を読んで、${futureText}。`;
+    block4 = `この本を読んで、${futureText}。なぜなら、主人公の経験から、自分の行動や考え方を見直すきっかけをもらったからです。この本を読んで、本当によかったと感じています。普段はあまり意識しないようなことを深く考えさせてくれる作品でした。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
-      block4 += `ぜひ${who}にも読んでほしいと思います。`;
+      block4 += `ぜひ${who}にも読んでほしいと思います。きっと多くのことを感じ取れる作品だと思います。`;
     }
   } else {
-    block4 = `この本を読んで、${futureText}。`;
+    block4 = `この本を読んで、${futureText}。なぜなら、主人公の行動や気持ちを読んで、自分もそうしたいと強く思ったからです。この本を読んで本当によかったと思います。今まであまり考えていなかったことについて、深く考えるきっかけになりました。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
-      block4 += `ぜひ${who}にも読んでもらいたいと思います。`;
+      block4 += `ぜひ${who}にも読んでもらいたいと思います。きっと何か大切なことが伝わると思います。`;
     }
   }
 
@@ -1025,6 +1039,12 @@ function updateProgress() {
     d.textContent = i < currentStep ? '✓' : e;
     row.appendChild(d);
   });
+  // ヘッダー画像をステップに合わせて切り替え
+  const headerImg = document.getElementById('headerOwl');
+  if (headerImg) {
+    const type = currentStep >= STEPS.length ? 'end' : currentStep >= 2 ? 'mid' : 'start';
+    headerImg.src = { start:'images/IMG_7110.png', mid:'images/IMG_7111.png', end:'images/IMG_7112.png' }[type];
+  }
 }
 
 /* ===== RENDER STEP ===== */
@@ -1256,7 +1276,9 @@ async function generateResult() {
 - 文章の文法を正しくし、子どもの回答（選択肢）を文中に自然な日本語として組み込む（例：「悲しかった・泣きそうになった」→「悲しくて泣きそうになりました」のように文として自然に変換する）
 - 【漢字ルール・必ず守ること】学習指導要領に基づき、${gradeNum === 1 ? `1年生配当の80字（一二三四五六七八九十百千上下左右中大小月日年早木林山川土空花草虫犬人名女男子目口手足見音力気円入出立休先生学校）のみ使用し、それ以外は全てひらがな` : `${gradeNum - 1}年生までに習う配当漢字（累積）のみ使用し、それ以外は全てひらがな。${gradeNum === 2 ? '例：「本→ほん」「読む→よむ」「書く→かく」「語→ご」（2年生配当）はひらがな' : gradeNum === 3 ? '例：「物語→ものがたり」「主人公→しゅじんこう」「場面→ばめん」「感動→かんどう」（3年生以降の配当）はひらがな' : gradeNum === 4 ? '例：「場面」「主人公」（3年生配当）は使用可。「感動→かんどう」「想像→そうぞう」（4年生配当）はひらがな' : gradeNum === 5 ? '例：「感動」「想像」（4年生配当）は使用可。「感謝→かんしゃ」「経験→けいけん」「複雑→ふくざつ」（5年生配当）はひらがな' : '例：「感謝」「経験」（5年生配当）は使用可。「責任→せきにん」「存在→そんざい」「演じる→えんじる」（6年生配当）はひらがな'}`}
 - 子ども自身が書いたような自然な文体で
-- 各ブロック3〜5文程度（長くなりすぎない）
+- 各ブロック5〜8文程度で、内容を充実させる
+- 各ブロックで「なぜそう思ったのか」「なぜそう感じたのか」という理由も必ず書く（例：「なぜなら〜だからです」「その理由は〜です」など）
+- 書き出しには読む前の期待感も書く。あらすじには主人公の行動の特徴も加える。心に残った場面には感情の理由と自分の想像も書く。まとめには読んでよかった理由も書く
 
 必ず以下のJSON形式だけで返してください（他のテキスト不要）:
 {
@@ -1272,7 +1294,7 @@ async function generateResult() {
       headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1200,
+        max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
