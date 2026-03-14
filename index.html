@@ -401,7 +401,11 @@ header p {
 .section-block:nth-child(2) { border-left-color: var(--green); animation-delay: 0.1s; }
 .section-block:nth-child(3) { border-left-color: var(--orange); animation-delay: 0.2s; }
 .section-block:nth-child(4) { border-left-color: var(--pink); animation-delay: 0.3s; }
-.section-label { font-family: 'Mochiy Pop One', sans-serif; font-size: 0.78rem; color: var(--text-light); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+.section-label { font-family: 'Mochiy Pop One', sans-serif; font-size: 0.78rem; color: var(--text-light); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; justify-content: space-between; }
+.section-voice { background: none; border: none; cursor: pointer; font-size: 0.9rem; padding: 2px 5px; border-radius: 6px; opacity: 0.55; transition: opacity 0.2s; }
+.section-voice:hover, .section-voice.speaking { opacity: 1; }
+.btn-read-all { width: 100%; margin-top: 8px; padding: 12px; background: linear-gradient(135deg, #e0f4ff, #cce8ff); color: var(--blue-dark); border: 2px solid var(--blue); border-radius: 14px; font-family: 'Mochiy Pop One', sans-serif; font-size: 0.92rem; cursor: pointer; transition: all 0.2s; }
+.btn-read-all:hover { background: linear-gradient(135deg, #cce8ff, #b3d9ff); }
 .section-content { font-size: 0.93rem; line-height: 1.85; color: var(--text); white-space: pre-wrap; }
 .btn-copy { width: 100%; margin-top: 10px; padding: 14px; background: linear-gradient(135deg, var(--green), #3da862); color: white; border: none; border-radius: 14px; font-family: 'Mochiy Pop One', sans-serif; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 16px rgba(92,186,125,0.35); transition: all 0.2s; }
 .btn-copy:hover { transform: translateY(-2px); }
@@ -770,6 +774,32 @@ let answers = {};
 let grade = '3年生';
 let isSpeaking = false;
 let speakSessionId = 0;
+let bestJaVoice = null;
+
+function initVoice() {
+  if (!window.speechSynthesis) return;
+  function pickVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    const ja = voices.filter(v => v.lang === 'ja-JP' || v.lang === 'ja');
+    // 優先順位: Enhanced/Premium/Neural → ローカル高品質 → ローカル → デフォルト
+    bestJaVoice =
+      ja.find(v => /enhanced|premium|neural/i.test(v.name)) ||
+      ja.find(v => v.localService && !/compact/i.test(v.name)) ||
+      ja.find(v => v.localService) ||
+      ja[0] || null;
+  }
+  pickVoice();
+  window.speechSynthesis.onvoiceschanged = pickVoice;
+}
+
+// 発話にボイス・速度・ピッチを適用する共通関数
+function applyVoice(u) {
+  u.lang = 'ja-JP';
+  u.rate = 0.92;   // 自然な速さ（デフォルト1.0より少し遅め）
+  u.pitch = 1.0;   // 自然なピッチ
+  u.volume = 1;
+  if (bestJaVoice) u.voice = bestJaVoice;
+}
 
 function gradeCat() {
   const g = parseInt(grade);
@@ -788,7 +818,7 @@ function speak(text) {
   stopSpeak();
   const sid = ++speakSessionId;
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'ja-JP'; u.rate = 0.88; u.pitch = 1.08; u.volume = 1;
+  applyVoice(u);
   u.onstart = () => {
     if (speakSessionId !== sid) return;
     isSpeaking = true;
@@ -836,7 +866,7 @@ function speakWithOptions(qId, voiceText, optLabels) {
       }
     }
     const u = new SpeechSynthesisUtterance(texts[i]);
-    u.lang = 'ja-JP'; u.rate = 0.88; u.pitch = 1.08; u.volume = 1;
+    applyVoice(u);
     isSpeaking = true;
     u.onend = () => { i++; next(); };
     u.onerror = () => { clearHighlights(); isSpeaking = false; };
@@ -891,8 +921,8 @@ const STEPS = [
       },
       {
         id: 'mainChar', emoji: '🧒',
-        text: { low: 'お話の中でいちばんたいせつな子は？', mid: '主人公はどんな子？', high: '主人公はどのような人物？' },
-        voice: { low: 'お話のなかでいちばんたいせつな子はどんな子か、えらんでね', mid: '主人公はどんな子か選んでね', high: '主人公はどのような人物か選んでね' },
+        text: { low: 'しゅじんこう（お話の主役の子）はどんな子？', mid: '主人公はどんな子？', high: '主人公はどのような人物？' },
+        voice: { low: 'しゅじんこう、つまりお話の主役の子はどんな子か、えらんでね', mid: '主人公はどんな子か選んでね', high: '主人公はどのような人物か選んでね' },
         options: {
           low: [
             {label:'げんきで明るい子',emoji:'😄'},
@@ -1563,6 +1593,25 @@ async function generateResult() {
   }
 }
 
+// 複数テキストを順番に読み上げ（結果ブロック用）
+function speakBlocks(texts) {
+  if (!window.speechSynthesis) return;
+  stopSpeak();
+  const sid = ++speakSessionId;
+  let i = 0;
+  function next() {
+    if (speakSessionId !== sid) return;
+    if (i >= texts.length) { isSpeaking = false; return; }
+    const u = new SpeechSynthesisUtterance(texts[i]);
+    applyVoice(u);
+    isSpeaking = true;
+    u.onend = () => { i++; next(); };
+    u.onerror = () => { isSpeaking = false; };
+    window.speechSynthesis.speak(u);
+  }
+  next();
+}
+
 /* ===== RESULT ===== */
 function renderResult(data) {
   const blocks = [
@@ -1593,9 +1642,13 @@ function renderResult(data) {
       <div class="result-emoji">🎉</div>
       <div class="result-title">下書きメモができたよ！</div>
     </div>
+    <button class="btn-read-all" onclick="speakBlocks([${blocks.map(b=>`${JSON.stringify(data[b.key]||'')}`).join(',')}])">🔊 ${cat==='low'?'ぜんぶよむ':'全部読む'}</button>
     ${blocks.map(b=>`
       <div class="section-block">
-        <div class="section-label">${b.label}</div>
+        <div class="section-label">
+          <span>${b.label}</span>
+          <button class="section-voice" onclick="speakBlocks([${JSON.stringify(data[b.key]||'')}])">🔊</button>
+        </div>
         <div class="section-content">${data[b.key]||''}</div>
       </div>`).join('')}
     <div class="char-count-display">
@@ -1646,6 +1699,7 @@ document.addEventListener('mousedown', (e) => {
 });
 
 // Init
+initVoice();
 renderStep();
 </script>
 </body>
