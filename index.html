@@ -463,6 +463,24 @@ header p {
 
 .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--text); color: white; padding: 12px 24px; border-radius: 50px; font-size: 0.9rem; font-weight: 500; transition: transform 0.3s; z-index: 100; white-space: nowrap; }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===== VOICE OPTION HIGHLIGHT ===== */
+.opt.voice-highlight { background: linear-gradient(135deg, #fff9c4 0%, #fff3e6 100%); border: 2px solid var(--orange); transform: scale(1.02); box-shadow: 0 2px 12px rgba(255,140,66,0.25); }
+
+/* ===== TITLE VOICE BUTTON ===== */
+.title-voice { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 8px; opacity: 0.6; transition: opacity 0.2s; vertical-align: middle; margin-left: 6px; }
+.title-voice:hover { opacity: 1; }
+.title-voice.speaking { opacity: 1; animation: pulse 0.8s infinite; }
+
+/* ===== CHAR COUNT DISPLAY ===== */
+.char-count-display { background: var(--green-light); border: 2px solid var(--green); border-radius: var(--radius); padding: 14px 16px; margin: 14px 0 10px; text-align: center; }
+.char-count-nums { font-weight: 700; margin-bottom: 8px; }
+.char-count-current { color: var(--blue-dark); font-size: 1.5rem; font-family: 'Mochiy Pop One', sans-serif; }
+.char-count-sep { color: var(--text-light); font-size: 1.1rem; margin: 0 4px; }
+.char-count-target { color: var(--text-light); font-size: 0.95rem; }
+.char-count-bar-wrap { background: #d4edda; border-radius: 10px; height: 12px; margin: 8px 0; overflow: hidden; }
+.char-count-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), #3da862); border-radius: 10px; transition: width 0.6s ease; }
+.char-count-hint { font-size: 0.88rem; color: var(--text); margin-top: 8px; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -751,6 +769,7 @@ let currentStep = 0;
 let answers = {};
 let grade = '3年生';
 let isSpeaking = false;
+let speakSessionId = 0;
 
 function gradeCat() {
   const g = parseInt(grade);
@@ -767,11 +786,13 @@ function t(obj) {
 function speak(text) {
   if (!window.speechSynthesis) return;
   stopSpeak();
+  const sid = ++speakSessionId;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'ja-JP'; u.rate = 0.88; u.pitch = 1.08; u.volume = 1;
   u.onstart = () => {
+    if (speakSessionId !== sid) return;
     isSpeaking = true;
-    document.querySelectorAll('.bubble-voice, .q-voice, .field-voice').forEach(b => {
+    document.querySelectorAll('.bubble-voice, .q-voice, .field-voice, .title-voice').forEach(b => {
       if (b.dataset.speak === text) b.classList.add('speaking');
     });
   };
@@ -782,11 +803,46 @@ function speak(text) {
   window.speechSynthesis.speak(u);
 }
 function stopSpeak() {
+  speakSessionId++;
   if (window.speechSynthesis) { window.speechSynthesis.cancel(); isSpeaking = false; }
-  document.querySelectorAll('.speaking').forEach(b => b.classList.remove('speaking'));
+  document.querySelectorAll('.speaking, .voice-highlight').forEach(b => b.classList.remove('speaking', 'voice-highlight'));
 }
 function toggleSpeak(text, el) {
   if (el.classList.contains('speaking')) { stopSpeak(); } else { speak(text); }
+}
+
+// 質問＋選択肢を順番に読み上げ、読んでいる選択肢をハイライト
+function speakWithOptions(qId, voiceText, optLabels) {
+  if (!window.speechSynthesis) return;
+  stopSpeak();
+  const sid = ++speakSessionId;
+  const texts = [voiceText, ...optLabels];
+  let i = 0;
+
+  function clearHighlights() {
+    const c = document.getElementById('opts_' + qId);
+    if (c) c.querySelectorAll('.opt').forEach(el => el.classList.remove('voice-highlight'));
+  }
+
+  function next() {
+    if (speakSessionId !== sid) { clearHighlights(); return; }
+    if (i >= texts.length) { clearHighlights(); isSpeaking = false; return; }
+    clearHighlights();
+    if (i > 0) {
+      const c = document.getElementById('opts_' + qId);
+      if (c) {
+        const opts = c.querySelectorAll('.opt');
+        if (opts[i - 1]) opts[i - 1].classList.add('voice-highlight');
+      }
+    }
+    const u = new SpeechSynthesisUtterance(texts[i]);
+    u.lang = 'ja-JP'; u.rate = 0.88; u.pitch = 1.08; u.volume = 1;
+    isSpeaking = true;
+    u.onend = () => { i++; next(); };
+    u.onerror = () => { clearHighlights(); isSpeaking = false; };
+    window.speechSynthesis.speak(u);
+  }
+  next();
 }
 
 /* ===== STEP DATA ===== */
@@ -1243,8 +1299,20 @@ function renderInfoStep(step) {
         🎒 学年
         <button class="field-voice" data-speak="学年を選んでね" onclick="toggleSpeak('学年を選んでね',this)">🔊</button>
       </label>
-      <select id="field_grade" onchange="grade=this.value;answers.grade=this.value;validateInfo()">
+      <select id="field_grade" onchange="grade=this.value;answers.grade=this.value;updateTargetCharDefault();validateInfo()">
         ${['1年生','2年生','3年生','4年生','5年生','6年生'].map(g=>`<option value="${g}" ${grade===g?'selected':''}>${g}</option>`).join('')}
+      </select>
+    </div>
+    <div class="simple-field">
+      <label class="field-label">
+        📏 ${gradeCat()==='low' ? 'もくひょうのもじすう' : '目標文字数'}
+        <button class="field-voice" data-speak="${gradeCat()==='low'?'もくひょうのもじすうをえらんでね':'目標文字数を選んでね'}" onclick="toggleSpeak(this.dataset.speak,this)">🔊</button>
+      </label>
+      <select id="field_targetChars" onchange="answers.targetChars=parseInt(this.value)">
+        <option value="400">400字</option>
+        <option value="800" ${parseInt(grade)<=2?'selected':''}>800字（${gradeCat()==='low'?'ていがくねんのめやす':'低学年の目安'}）</option>
+        <option value="1200" ${parseInt(grade)>=3&&parseInt(grade)<=6?'selected':''}>1200字（${gradeCat()==='low'?'ちゅう・こうがくねんのめやす':'中・高学年の目安'}）</option>
+        <option value="2000">2000字</option>
       </select>
     </div>
     ${renderApiKeySection()}
@@ -1264,16 +1332,19 @@ function validateInfo() {
 
 function renderChoiceStep(step) {
   const msg = t(step.mascotMsg);
+  const titleText = t(step.title);
   const cat = gradeCat();
   let questionsHTML = step.questions.map((q, qi) => {
     const opts = q.options[cat] || q.options.mid;
     const cur = answers[q.id] || {};
+    const allOptLabels = [...opts.map(o => o.label), cat==='low'?'その他（じぶんで書く）':'その他（自分で書く）'];
+    const optLabelsJson = JSON.stringify(allOptLabels).replace(/"/g, '&quot;');
     return `
       <div class="choice-group">
         <div class="q-header">
           <span class="q-num">${qi+1}</span>
           <span class="q-text">${q.emoji} ${t(q.text)}</span>
-          <button class="q-voice" data-speak="${t(q.voice).replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak,this)">🔊</button>
+          <button class="q-voice" data-speak="${t(q.voice).replace(/"/g,'&quot;')}" data-qid="${q.id}" data-opts="${optLabelsJson}" onclick="speakWithOptions(this.dataset.qid, this.dataset.speak, JSON.parse(this.dataset.opts))">🔊</button>
         </div>
         <div class="options-list" id="opts_${q.id}">
           ${opts.map((o,oi) => {
@@ -1307,7 +1378,10 @@ function renderChoiceStep(step) {
       </div>
     </div>
     <div class="step-badge">${step.emoji} ${step.badge}</div>
-    <h2>${t(step.title)}</h2>
+    <h2 style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <span>${titleText}</span>
+      <button class="title-voice" data-speak="${titleText.replace(/"/g,'&quot;')}" onclick="toggleSpeak(this.dataset.speak,this)">🔊</button>
+    </h2>
     ${questionsHTML}
     <div class="btn-row">
       <button class="btn btn-back" onclick="prevStep()">← もどる</button>
@@ -1353,11 +1427,21 @@ function validateChoices() {
 }
 
 /* ===== NAVIGATION ===== */
+function updateTargetCharDefault() {
+  const sel = document.getElementById('field_targetChars');
+  if (!sel) return;
+  const g = parseInt(grade);
+  sel.value = g <= 2 ? '800' : g <= 6 ? '1200' : '2000';
+  answers.targetChars = parseInt(sel.value);
+}
+
 function saveInfoAnswers() {
   const titleEl = document.getElementById('field_title');
   const gradeEl = document.getElementById('field_grade');
+  const targetEl = document.getElementById('field_targetChars');
   if (titleEl) { answers.title = titleEl.value; }
   if (gradeEl) { answers.grade = gradeEl.value; grade = gradeEl.value; }
+  if (targetEl) { answers.targetChars = parseInt(targetEl.value); }
 }
 
 function nextStep() {
@@ -1489,6 +1573,14 @@ function renderResult(data) {
   ];
   const cat = gradeCat();
   const doneMsg = cat==='low' ? 'できたよ！コピーして つかってね！' : '下書きメモができたよ！コピーして使ってね！';
+
+  const totalChars = blocks.reduce((sum, b) => sum + (data[b.key] || '').length, 0);
+  const targetChars = answers.targetChars || (cat === 'low' ? 800 : 1200);
+  const pct = Math.min(Math.round((totalChars / targetChars) * 100), 100);
+  const charHint = cat === 'low'
+    ? 'これをさんこうに、にくをつけてかいてみてね！'
+    : 'これを参考に、肉付けして書いてみてね！';
+
   document.getElementById('mainCard').innerHTML = `
     <div class="char-row">
       ${getCharImg('end')}
@@ -1499,13 +1591,24 @@ function renderResult(data) {
     </div>
     <div class="result-header">
       <div class="result-emoji">🎉</div>
-      <div class="result-title">${cat==='low'?'下書きメモができたよ！':'下書きメモができたよ！'}</div>
+      <div class="result-title">下書きメモができたよ！</div>
     </div>
     ${blocks.map(b=>`
       <div class="section-block">
         <div class="section-label">${b.label}</div>
         <div class="section-content">${data[b.key]||''}</div>
       </div>`).join('')}
+    <div class="char-count-display">
+      <div class="char-count-nums">
+        <span class="char-count-current">${totalChars}字</span>
+        <span class="char-count-sep"> / </span>
+        <span class="char-count-target">目標 ${targetChars}字</span>
+      </div>
+      <div class="char-count-bar-wrap">
+        <div class="char-count-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <p class="char-count-hint">${charHint}</p>
+    </div>
     <button class="btn-copy" onclick="copyAll()">📋 ${cat==='low'?'ぜんぶコピーする':'全部コピーする'}</button>
     <button class="btn-restart" onclick="restart()">🔄 ${cat==='low'?'もう一さつやってみる':'もう一冊やってみる'}</button>`;
   speak(doneMsg);
@@ -1529,6 +1632,18 @@ function restart() {
   renderStep();
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+// どこかを触ると音声が止まる（音声ボタン自体はtoggleSpeakで管理）
+document.addEventListener('touchstart', (e) => {
+  if (!isSpeaking) return;
+  const voiceBtn = e.target.closest('.bubble-voice, .q-voice, .field-voice, .title-voice');
+  if (!voiceBtn) stopSpeak();
+}, { passive: true });
+document.addEventListener('mousedown', (e) => {
+  if (!isSpeaking) return;
+  const voiceBtn = e.target.closest('.bubble-voice, .q-voice, .field-voice, .title-voice');
+  if (!voiceBtn) stopSpeak();
+});
 
 // Init
 renderStep();
