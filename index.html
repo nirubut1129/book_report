@@ -531,6 +531,28 @@ header p {
 .vocab-alt:hover { border-color: var(--orange); background: #fff3e6; }
 .vocab-alt:last-child { margin-bottom: 0; }
 
+/* ===== FEATURE 4: OWL VOCAB TIP ===== */
+.vocab-owl-word {
+  background: linear-gradient(135deg, #fff9e6, #fffbf0);
+  border-bottom: 2.5px solid var(--yellow); cursor: pointer;
+  border-radius: 3px; color: #7a5c00; font-weight: 700;
+  padding: 0 2px; transition: background 0.15s;
+}
+.vocab-owl-word:hover, .vocab-owl-word:active { background: #fff3cd; }
+.vocab-owl-popup {
+  position: fixed; background: white; border: 2.5px solid var(--yellow);
+  border-radius: 14px; padding: 12px 14px;
+  box-shadow: 0 8px 32px rgba(255,216,77,0.3);
+  z-index: 201; min-width: 220px; max-width: 300px; display: none;
+}
+.vocab-owl-popup.show { display: block; animation: slideUp 0.2s ease; }
+.vocab-owl-popup-header {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'Mochiy Pop One', sans-serif; font-size: 0.85rem;
+  color: var(--text); margin-bottom: 6px;
+}
+.vocab-owl-popup-tip { font-size: 0.82rem; color: var(--text-light); line-height: 1.6; }
+
 /* ===== FEATURE 3: STRUCTURE OUTLINE ===== */
 .outline-block {
   background: linear-gradient(135deg, #f0f9ff, #e8f4ff);
@@ -587,6 +609,7 @@ header p {
 <div class="main"><div class="card" id="mainCard"></div></div>
 <div class="toast" id="toast">📋 コピーしました！</div>
 <div class="vocab-popup" id="vocabPopup"></div>
+<div class="vocab-owl-popup" id="owlTipPopup"></div>
 
 <script>
 /* ===== CHARACTER IMAGES ===== */
@@ -750,6 +773,11 @@ function buildDemoResult() {
       ? `このお話はどのばめんもこころにのこりました。よんでいて、${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `いちばんこころにのこったのは、${sceneWhenLabel}のばめんです。そのばめんでは、${normalizeFeeling(sceneFeelLabel)}なりました。`;
     block3 += `なぜそんなきもちになったかというと、${normalizeSceneReason(sceneReasonLabel)}です。`;
+    block3 += sceneFeelLabel.includes('かなし') || sceneFeelLabel.includes('なきそう')
+      ? `むねをよんでいると、★胸がギューッとなった★ほど、しゅじんこうのきもちがつたわってきました。`
+      : sceneFeelLabel.includes('びっくり') || sceneFeelLabel.includes('ドキドキ')
+      ? `そのばめんをよんでいると、★心臓がバクバクした★ほどどきどきしました。`
+      : `そのばめんをよんでいると、★目がはなせなかった★ほどひきこまれました。`;
     if (similarText) block3 += `じぶんにも「${similarText}」というけいけんがあって、しゅじんこうのきもちがよくわかりました。`;
     else if (!similarLabel.includes('ない')) block3 += `じぶんにも似たようなけいけんがあったので、しゅじんこうのきもちがさらによくわかりました。`;
   } else if (high) {
@@ -757,6 +785,11 @@ function buildDemoResult() {
       ? `この物語は全体を通して印象に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `最も印象に残ったのは${sceneWhenLabel}の場面で、${normalizeFeeling(sceneFeelLabel)}なりました。`;
     block3 += `なぜそのような感情を抱いたかというと、${normalizeSceneReason(sceneReasonLabel)}からです。`;
+    block3 += sceneFeelLabel.includes('悲し') || sceneFeelLabel.includes('涙')
+      ? `その場面を読んでいると、★切なさがこみ上げた★ほど主人公の苦しさが伝わってきました。`
+      : sceneFeelLabel.includes('驚き') || sceneFeelLabel.includes('ドキドキ')
+      ? `その場面では★意表を突かれた★ような感覚を覚え、一瞬息をのみました。`
+      : `その場面を読みながら、★圧倒された★ような感覚で文字を追い続けました。`;
     if (similarText) block3 += `自分自身も「${similarText}」という経験があり、主人公の気持ちがとてもよく分かりました。`;
     else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があり、主人公の気持ちが深く伝わってきました。`;
   } else {
@@ -764,6 +797,11 @@ function buildDemoResult() {
       ? `この物語は全体的に心に残り、読んでいて${normalizeFeeling(sceneFeelLabel)}なりました。`
       : `最も心に残ったのは、${sceneWhenLabel}の場面です。その場面では、${normalizeFeeling(sceneFeelLabel)}なりました。`;
     block3 += `なぜそのような気持ちになったかというと、${normalizeSceneReason(sceneReasonLabel)}からです。`;
+    block3 += sceneFeelLabel.includes('悲し') || sceneFeelLabel.includes('なきそう')
+      ? `その場面を読みながら、★胸が締め付けられた★ほど、主人公の気持ちがリアルに伝わってきました。`
+      : sceneFeelLabel.includes('びっくり') || sceneFeelLabel.includes('ドキドキ')
+      ? `その場面では★驚きを隠せなかった★ほど、展開に引き込まれました。`
+      : `その場面を読みながら、★心が弾んだ★ような気持ちで読み進めました。`;
     if (similarText) block3 += `自分にも「${similarText}」という経験があり、主人公の気持ちがよく分かりました。`;
     else if (!similarLabel.includes('ない')) block3 += `自分にも似た経験があって、主人公の気持ちがより一層伝わってきました。`;
   }
@@ -785,19 +823,19 @@ function buildDemoResult() {
   }
   let block4 = '';
   if (low) {
-    block4 = `この本をよんで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、じぶんもそうしたいとつよくおもったからです。この本をよんでよかったとおもいます。`;
+    block4 = `この本をよんで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、じぶんもそうしたいとつよくおもったからです。この本をよんでいると、★むねがあたたかくなった★きもちになりました。この本をよんでよかったとおもいます。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
       block4 += `${who}にも、ぜひよんでほしいとおもいます。きっとたのしんでよめるとおもいます。`;
     }
   } else if (high) {
-    block4 = `この本を読んで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、自分の行動や考え方を見直すきっかけをもらったからです。この本を読んで、本当によかったと感じています。`;
+    block4 = `この本を読んで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、自分の行動や考え方を見直すきっかけをもらったからです。この物語には★感銘を受けた★ほどの力があり、読んで本当によかったと感じています。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
       block4 += `ぜひ${who}にも読んでほしいと思います。きっと多くのことを感じ取れる作品だと思います。`;
     }
   } else {
-    block4 = `この本を読んで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、自分もそうしたいと強く思ったからです。この本を読んで本当によかったと思います。`;
+    block4 = `この本を読んで、${futureText}。なぜなら、${normalizeCharAction(charActionLabel)}、自分もそうしたいと強く思ったからです。この本を読んでいると★心が弾んだ★ような気持ちになりました。この本を読んで本当によかったと思います。`;
     if (recommendLabel && !recommendLabel.includes('すすめない')) {
       const who = recommendLabel.replace('にすすめたい', '');
       block4 += `ぜひ${who}にも読んでもらいたいと思います。きっと何か大切なことが伝わると思います。`;
@@ -1367,76 +1405,98 @@ const STEPS = [
 const STEP_EMOJIS = ['📖','📚','💬','🌱','🤔','🎉'];
 
 /* ===== FEATURE 1: DEEP-DIVE FOLLOWUP MAP ===== */
+// 共通の選択肢（charAction の深掘り全て共通）
+const _AC = {
+  low:  [{label:'できると思う！',emoji:'💪'},{label:'むずかしいかも',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+  mid:  [{label:'できると思う！',emoji:'💪'},{label:'難しそうかも…',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
+  high: [{label:'できると思う！',emoji:'💪'},{label:'できるかもしれない',emoji:'🤔'},{label:'難しいかもしれない',emoji:'🌀'}],
+};
 const FOLLOWUP_MAP = {
-  // sceneReason: 「自分と似ていたから」系
-  'sceneReason_じぶんとにていたから': {
-    type: 'text',
-    question: { low: 'どんな場面に似てたの？（みじかくでいいよ）', mid: 'どんな場面と似てた？（短くでOK）', high: 'どのような場面と重なった？' }
-  },
-  'sceneReason_自分と似ていたから': {
-    type: 'text',
-    question: { low: 'どんな場面に似てたの？（みじかくでいいよ）', mid: 'どんな場面と似てた？（短くでOK）', high: 'どのような場面と重なった？' }
-  },
-  'sceneReason_自分の経験と重なったから': {
-    type: 'text',
-    question: { low: 'どんな場面に似てたの？（みじかくでいいよ）', mid: 'どんな場面と似てた？（短くでOK）', high: 'どのような場面と重なった？' }
-  },
-  // charAction: 「勇気を出したこと」系
-  'charAction_ゆうきをだしたこと': {
-    type: 'choices',
-    question: { low: 'もし同じ立場だったら、ゆうきが出せそう？', mid: '同じ立場だったら勇気が出せそう？', high: '同じ立場なら、その勇気は出せそうかな？' },
-    options: {
-      low:  [{label:'出せると思う！',emoji:'💪'},{label:'うーん、むずかしいかも',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
-      mid:  [{label:'出せると思う！',emoji:'💪'},{label:'難しそうかも…',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
-      high: [{label:'出せると思う！',emoji:'💪'},{label:'出せるかもしれない',emoji:'🤔'},{label:'難しいかもしれない',emoji:'🌀'}],
-    }
-  },
-  'charAction_勇気を出したこと': {
-    type: 'choices',
-    question: { low: 'もし同じ立場だったら、ゆうきが出せそう？', mid: '同じ立場だったら勇気が出せそう？', high: '同じ立場なら、その勇気は出せそうかな？' },
-    options: {
-      low:  [{label:'出せると思う！',emoji:'💪'},{label:'うーん、むずかしいかも',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
-      mid:  [{label:'出せると思う！',emoji:'💪'},{label:'難しそうかも…',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
-      high: [{label:'出せると思う！',emoji:'💪'},{label:'出せるかもしれない',emoji:'🤔'},{label:'難しいかもしれない',emoji:'🌀'}],
-    }
-  },
-  'charAction_恐れを乗り越えて行動したこと': {
-    type: 'choices',
-    question: { low: 'もし同じ立場だったら、ゆうきが出せそう？', mid: '同じ立場だったら勇気が出せそう？', high: '同じ立場なら、その勇気は出せそうかな？' },
-    options: {
-      low:  [{label:'出せると思う！',emoji:'💪'},{label:'うーん、むずかしいかも',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
-      mid:  [{label:'出せると思う！',emoji:'💪'},{label:'難しそうかも…',emoji:'🤔'},{label:'わからない',emoji:'🌀'}],
-      high: [{label:'出せると思う！',emoji:'💪'},{label:'出せるかもしれない',emoji:'🤔'},{label:'難しいかもしれない',emoji:'🌀'}],
-    }
-  },
+  // ===== sceneFeel: すべての感情に深掘り =====
+  'sceneFeel_かなしかった・なきそうになった':         { type:'text', question:{low:'どんなところが一番かなしかった？',mid:'どんなところが一番かなしかった？',high:'どのような場面で悲しみを感じた？'} },
+  'sceneFeel_うれしかった・あたたかいきもちになった': { type:'text', question:{low:'どんなところがうれしかった？',mid:'どんなところがうれしかった？',high:'どのような点に温かさを感じた？'} },
+  'sceneFeel_びっくりした・ドキドキした':             { type:'text', question:{low:'どんなことにびっくりした？',mid:'どんなことにびっくりした？',high:'何がきっかけでドキドキした？'} },
+  'sceneFeel_思わず笑った':                           { type:'text', question:{low:'どんなところがおもしろかった？',mid:'どんなところがおもしろかった？',high:'どのような表現がおもしろかった？'} },
+  'sceneFeel_もやもや・くやしいきもちになった':       { type:'text', question:{low:'何がくやしかった？',mid:'何がくやしかった？',high:'何に対してもどかしさを感じた？'} },
+  'sceneFeel_悲しかった・泣きそうになった':           { type:'text', question:{low:'どんな場面で特に悲しくなった？',mid:'どんな場面で特に悲しくなった？',high:'どのような場面で悲しみを感じた？'} },
+  'sceneFeel_うれしかった・温かい気持ちになった':     { type:'text', question:{low:'どんなところが温かかった？',mid:'どんなところが温かかった？',high:'どのような点に温かさを感じた？'} },
+  'sceneFeel_思わず笑ってしまった':                   { type:'text', question:{low:'どんな場面で笑いそうになった？',mid:'どんな場面で笑いそうになった？',high:'どのような表現にユーモアを感じた？'} },
+  'sceneFeel_くやしい・もどかしい気持ちになった':     { type:'text', question:{low:'何がくやしかった？',mid:'何がくやしかった？',high:'何に対してもどかしさを感じた？'} },
+  'sceneFeel_悲しみ・涙を感じた':                     { type:'text', question:{low:'どんな場面で悲しくなった？',mid:'どんな場面で悲しくなった？',high:'どのような場面で悲しみを感じた？'} },
+  'sceneFeel_喜び・温かさを感じた':                   { type:'text', question:{low:'どんなところが温かかった？',mid:'どんなところが温かかった？',high:'どのような点に温かさを感じた？'} },
+  'sceneFeel_驚き・ドキドキした':                     { type:'text', question:{low:'何にびっくりした？',mid:'何にびっくりした？',high:'どのような点が特に印象的だった？'} },
+  'sceneFeel_ユーモアを感じた':                       { type:'text', question:{low:'どんなところがおもしろかった？',mid:'どんなところがおもしろかった？',high:'どのような表現にユーモアを感じた？'} },
+  'sceneFeel_くやしさ・もどかしさを感じた':           { type:'text', question:{low:'何がくやしかった？',mid:'何がくやしかった？',high:'何に対してもどかしさを感じた？'} },
+
+  // ===== sceneReason: すべての理由に深掘り =====
+  'sceneReason_しゅじんこうがかわいそうだったから':       { type:'text', question:{low:'どんなところがかわいそうだった？',mid:'どんなところがかわいそうだった？',high:'どのような苦しさが伝わってきた？'} },
+  'sceneReason_しゅじんこうがかっこよかったから':         { type:'text', question:{low:'どんなところがかっこよかった？',mid:'どんなところがかっこよかった？',high:'どの行動がかっこよかった？'} },
+  'sceneReason_じぶんとにていたから':                     { type:'text', question:{low:'どんな場面に似てたの？（みじかくでいいよ）',mid:'どんな場面と似てた？（短くでOK）',high:'どのような場面と重なった？'} },
+  'sceneReason_よそうとちがうことがおきたから':           { type:'text', question:{low:'どんなことがよそうとちがった？',mid:'どんなことが予想と違った？',high:'どんな点が予想外だった？'} },
+  'sceneReason_しゅじんこうのきもちがよくわかったから':   { type:'text', question:{low:'どんなきもちだったと思う？',mid:'どんな気持ちがよく分かった？',high:'どんな感情が特にリアルだった？'} },
+  'sceneReason_主人公がかわいそうだったから':             { type:'text', question:{low:'どんなところがかわいそうだった？',mid:'どんなところがかわいそうだった？',high:'どのような苦しさが伝わってきた？'} },
+  'sceneReason_主人公がかっこよかったから':               { type:'text', question:{low:'どんなところがかっこよかった？',mid:'どんなところがかっこよかった？',high:'どの行動がかっこよかった？'} },
+  'sceneReason_自分と似ていたから':                       { type:'text', question:{low:'どんな場面に似てたの？（みじかくでいいよ）',mid:'どんな場面と似てた？（短くでOK）',high:'どのような場面と重なった？'} },
+  'sceneReason_予想と違うことが起きたから':               { type:'text', question:{low:'どんなことがよそうとちがった？',mid:'どんなことが予想と違った？',high:'どんな点が予想外だった？'} },
+  'sceneReason_主人公の気持ちがよく分かったから':         { type:'text', question:{low:'どんなきもちだったと思う？',mid:'どんな気持ちがよく分かった？',high:'どんな感情が特にリアルだった？'} },
+  'sceneReason_主人公の苦しさが伝わってきたから':         { type:'text', question:{low:'どんなところがつらそうだった？',mid:'どんな苦しさが伝わってきた？',high:'具体的にどんな苦しさが伝わった？'} },
+  'sceneReason_主人公の行動がかっこよかったから':         { type:'text', question:{low:'どんなこうどうがかっこよかった？',mid:'どの行動がかっこよかった？',high:'どの行動がかっこよかった？'} },
+  'sceneReason_自分の経験と重なったから':                 { type:'text', question:{low:'どんな場面に似てたの？（みじかくでいいよ）',mid:'どんな場面と似てた？（短くでOK）',high:'どのような場面と重なった？'} },
+  'sceneReason_予想外の展開だったから':                   { type:'text', question:{low:'どんなてんかいがびっくりした？',mid:'どんな点が予想外だった？',high:'どんな点が予想外だった？'} },
+  'sceneReason_主人公の感情がリアルに伝わってきたから':   { type:'text', question:{low:'どんなきもちがつたわってきた？',mid:'どんな感情がリアルに伝わった？',high:'どんな感情が特にリアルだった？'} },
+
+  // ===== charAction: すべての行動に深掘り =====
+  'charAction_あきらめずにつづけたこと':  { type:'choices', question:{low:'もし同じ立場なら、続けられそう？',mid:'同じ立場なら、諦めずに続けられそう？',high:'同じ立場なら、諦めずに続けられそうかな？'}, options:_AC },
+  'charAction_だれかのためにうごいたこと': { type:'choices', question:{low:'もし同じ立場なら、同じことができそう？',mid:'同じ立場なら、同じように動けそう？',high:'同じ立場なら、同じ行動ができそうかな？'}, options:_AC },
+  'charAction_じぶんのきもちをつたえたこと': { type:'choices', question:{low:'もし同じ立場なら、きもちを伝えられそう？',mid:'同じ立場なら、気持ちを伝えられそう？',high:'同じ立場なら、正直に伝えられそうかな？'}, options:_AC },
+  'charAction_ゆうきをだしたこと':         { type:'choices', question:{low:'もし同じ立場だったら、ゆうきが出せそう？',mid:'同じ立場だったら勇気が出せそう？',high:'同じ立場なら、その勇気は出せそうかな？'}, options:_AC },
+  'charAction_まちがいをみとめてあやまったこと': { type:'choices', question:{low:'もし同じ立場なら、あやまれそう？',mid:'同じ立場なら、素直に謝れそう？',high:'同じ立場なら、素直に謝れそうかな？'}, options:_AC },
+  'charAction_あきらめずに続けたこと':    { type:'choices', question:{low:'もし同じ立場なら、続けられそう？',mid:'同じ立場なら、諦めずに続けられそう？',high:'同じ立場なら、諦めずに続けられそうかな？'}, options:_AC },
+  'charAction_誰かのために動いたこと':    { type:'choices', question:{low:'もし同じ立場なら、同じことができそう？',mid:'同じ立場なら、同じように動けそう？',high:'同じ立場なら、同じ行動ができそうかな？'}, options:_AC },
+  'charAction_自分の気持ちを伝えたこと':  { type:'choices', question:{low:'もし同じ立場なら、きもちを伝えられそう？',mid:'同じ立場なら、気持ちを伝えられそう？',high:'同じ立場なら、正直に伝えられそうかな？'}, options:_AC },
+  'charAction_勇気を出したこと':          { type:'choices', question:{low:'もし同じ立場だったら、ゆうきが出せそう？',mid:'同じ立場だったら勇気が出せそう？',high:'同じ立場なら、その勇気は出せそうかな？'}, options:_AC },
+  'charAction_間違いを認めて謝ったこと':  { type:'choices', question:{low:'もし同じ立場なら、あやまれそう？',mid:'同じ立場なら、素直に謝れそう？',high:'同じ立場なら、素直に謝れそうかな？'}, options:_AC },
+  'charAction_諦めずに挑戦し続けたこと':  { type:'choices', question:{low:'もし同じ立場なら、続けられそう？',mid:'同じ立場なら、諦めずに続けられそう？',high:'同じ立場なら、諦めずに続けられそうかな？'}, options:_AC },
+  'charAction_他者のために自分を犠牲にしたこと': { type:'choices', question:{low:'もし同じ立場なら、同じことができそう？',mid:'同じ立場なら、同じように動けそう？',high:'同じ立場なら、同じ行動ができそうかな？'}, options:_AC },
+  'charAction_正直に自分の気持ちを伝えたこと': { type:'choices', question:{low:'もし同じ立場なら、きもちを伝えられそう？',mid:'同じ立場なら、気持ちを伝えられそう？',high:'同じ立場なら、正直に伝えられそうかな？'}, options:_AC },
+  'charAction_恐れを乗り越えて行動したこと': { type:'choices', question:{low:'もし同じ立場だったら、ゆうきが出せそう？',mid:'同じ立場だったら勇気が出せそう？',high:'同じ立場なら、その勇気は出せそうかな？'}, options:_AC },
+  'charAction_非を認めて謝罪・反省したこと': { type:'choices', question:{low:'もし同じ立場なら、あやまれそう？',mid:'同じ立場なら、素直に謝れそう？',high:'同じ立場なら、素直に謝れそうかな？'}, options:_AC },
 };
 
-/* ===== FEATURE 2: VOCAB BOOST MAPS ===== */
+/* ===== FEATURE 2: VOCAB BOOST MAPS（五感・体感 → 抽象・情緒）===== */
 const VOCAB_MAP_LOW = [
-  { word: 'すごかった',     alts: ['とても印象的だった', 'おどろいた',         'こころをうごかされた'] },
-  { word: 'かなしかった',   alts: ['きゅんとした',       'むねがしめつけられた','やりきれなかった']    },
-  { word: 'おもしろかった', alts: ['むちゅうになった',   'ひきこまれた',        'わくわくした']        },
-  { word: 'うれしかった',   alts: ['むねがあたたかくなった','よろこびがあふれた','こころがはずんだ']   },
-  { word: 'かわいそう',     alts: ['むねがいたくなった', 'きゅんとした',        'つらいきもちになった']},
-  { word: 'びっくりした',   alts: ['とてもおどろいた',   'よそうがはずれた',    'めをうたがった']      },
+  // 五感・体感ことば中心
+  { word: 'すごかった',     alts: ['目がはなせなかった',   '心臓がバクバクした',   'こころをうごかされた'] },
+  { word: 'かなしかった',   alts: ['胸がギューッとなった', 'なみだがでそうになった','のどがきゅっとなった'] },
+  { word: 'おもしろかった', alts: ['目がはなせなかった',   'ひきこまれた',          'わくわくが止まらなかった'] },
+  { word: 'うれしかった',   alts: ['むねがあたたかくなった','心がぽかぽかした',    'よろこびがあふれた']   },
+  { word: 'かわいそう',     alts: ['むねがいたくなった',   '胸がギューッとなった', 'のどがつまった']       },
+  { word: 'びっくりした',   alts: ['心臓がバクバクした',   '目がまんまるになった', 'よそうがはずれた']     },
+  { word: 'ドキドキした',   alts: ['心臓がバクバクした',   'てあしがふるえた',     'むねがいっぱいになった']},
+  { word: 'よかった',       alts: ['こころにひびいた',     'むねがあたたかくなった','ほっとした']           },
 ];
 const VOCAB_MAP_MID = [
-  { word: 'すごかった',   alts: ['とても印象的だった', '心を動かされた',     '驚かされた']         },
-  { word: '悲しかった',   alts: ['切ない気持ちになった','胸が締め付けられた', 'やりきれなかった']   },
-  { word: '面白かった',   alts: ['夢中になった',       '引き込まれた',       '胸が踊った']         },
-  { word: 'うれしかった', alts: ['胸が温かくなった',   '喜びがあふれた',     '心が弾んだ']         },
-  { word: 'かわいそう',   alts: ['胸が痛くなった',     '切なくなった',       'つらくなった']       },
-  { word: 'びっくりした', alts: ['とても驚いた',       '驚きを隠せなかった', '予想外だった']       },
-  { word: 'すごく',       alts: ['とても',             '強く',               'たいへん']           },
+  { word: 'すごかった',   alts: ['心を動かされた',       '胸が締め付けられた',   '引き込まれた']         },
+  { word: '悲しかった',   alts: ['切ない気持ちになった', '胸が締め付けられた',   'やりきれなかった']     },
+  { word: '面白かった',   alts: ['夢中になった',         '引き込まれた',         '胸が踊った']           },
+  { word: 'うれしかった', alts: ['胸が温かくなった',     '喜びがあふれた',       '心が弾んだ']           },
+  { word: 'かわいそう',   alts: ['胸が痛くなった',       '切なくなった',         '胸が締め付けられた']   },
+  { word: 'びっくりした', alts: ['驚きを隠せなかった',   '心臓がドキッとした',   '予想外だった']         },
+  { word: 'ドキドキした', alts: ['緊張で胸が高鳴った',   '心臓がドキドキした',   '息をのんだ']           },
+  { word: 'よかった',     alts: ['心に響いた',           'ほっとした',           '感動した']             },
+  { word: 'すごく',       alts: ['とても',               '強く',                 'たいへん']             },
 ];
 const VOCAB_MAP_HIGH = [
-  { word: 'すごかった',   alts: ['とても印象的だった', '心を打たれた',       '感銘を受けた']       },
-  { word: '悲しかった',   alts: ['切ない気持ちになった','胸が締め付けられた', '胸にこたえた']       },
-  { word: '面白かった',   alts: ['夢中になった',       '引き込まれた',       '興味深かった']       },
-  { word: 'うれしかった', alts: ['心が温まった',       '喜びが溢れた',       '心が弾んだ']         },
-  { word: 'かわいそう',   alts: ['胸が締め付けられた', '切ない思いになった', '同情した']           },
-  { word: 'びっくりした', alts: ['驚きを隠せなかった', '意表を突かれた',     '予想外だった']       },
-  { word: 'すごく',       alts: ['とても',             '非常に',             'たいへん']           },
+  // 抽象・情緒表現中心
+  { word: 'すごかった',   alts: ['圧倒された',           '感銘を受けた',         '心を打たれた']         },
+  { word: '悲しかった',   alts: ['切なさがこみ上げた',   '胸が締め付けられた',   '胸にこたえた']         },
+  { word: '面白かった',   alts: ['知的好奇心をくすぐられた','引き込まれた',       '夢中になった']         },
+  { word: 'うれしかった', alts: ['心が満たされた',       '喜びが溢れた',         '温かい感情が込み上げた']},
+  { word: 'かわいそう',   alts: ['共感を覚えた',         '切なさがこみ上げた',   '胸が痛んだ']           },
+  { word: 'びっくりした', alts: ['意表を突かれた',       '驚きを禁じ得なかった', '予想外の展開だった']   },
+  { word: 'ドキドキした', alts: ['緊張感が高まった',     '息をのんだ',           '心拍が上がった']       },
+  { word: 'よかった',     alts: ['感銘を受けた',         '心に響いた',           '意義深かった']         },
+  { word: 'すごく',       alts: ['非常に',               '強く',                 'たいへん']             },
 ];
 
 /* ===== PROGRESS ===== */
@@ -1741,7 +1801,23 @@ async function generateResult() {
   }
   const cat = gradeCat();
   const gradeNum = parseInt(grade);
-  const prompt = `あなたは小学生の読書感想文を優しくサポートする先生です。
+  // 深掘り回答をすべて収集
+  const followupLines = Object.keys(answers)
+    .filter(k => k.endsWith('_follow') && (answers[k].text || answers[k].label))
+    .map(k => `【${k.replace('_follow','')} 深掘り】${answers[k].text || answers[k].label}`)
+    .join('\n');
+
+  // 学年別・語彙ブーストワードリスト
+  const vocabList = gradeNum <= 2
+    ? '「目がはなせなかった」「心臓がバクバクした」「胸がギューッとなった」「むねがあたたかくなった」「むちゅうになった」'
+    : gradeNum <= 4
+    ? '「胸が締め付けられた」「夢中になった」「心が弾んだ」「引き込まれた」「緊張で胸が高鳴った」「心に響いた」'
+    : '「圧倒された」「感銘を受けた」「切なさがこみ上げた」「知的好奇心をくすぐられた」「共感を覚えた」「意表を突かれた」';
+
+  const prompt = `あなたは読書感想文を書く子どもの「コーチ」です。
+子どもが選んだ回答をつなぎながら、一緒に感想文を磨き上げるように文章を作ります。
+AIが勝手にエピソードを作るのではなく、子どもの言葉を大切にしながら、より豊かな表現に育てる役割です。
+
 以下の子どもの回答をもとに、感想文の「下書きメモ」を作ってください。
 
 【本のタイトル】${answers.title}
@@ -1758,7 +1834,7 @@ async function generateResult() {
 【自分の似た経験】${answerText('similarExp')}
 【これからしたいこと】${answerText('future')}
 【主人公の印象的な行動】${answerText('charAction')}
-【すすめたい人】${answerText('recommend')}${answers['sceneReason_follow'] && answers['sceneReason_follow'].text ? `\n【場面との共通点（深掘り）】${answers['sceneReason_follow'].text}` : ''}${answers['charAction_follow'] && answers['charAction_follow'].label ? `\n【同じ立場だったら？（深掘り）】${answers['charAction_follow'].label}` : ''}
+【すすめたい人】${answerText('recommend')}${followupLines ? '\n' + followupLines : ''}
 
 以下の条件で書いてください：
 - ${grade}らしい、自然でやさしい言葉遣いで書く
@@ -1767,8 +1843,10 @@ async function generateResult() {
 - 【漢字ルール・必ず守ること】学習指導要領に基づき、${gradeNum === 1 ? `1年生配当の80字（一二三四五六七八九十百千上下左右中大小月日年早木林山川土空花草虫犬人名女男子目口手足見音力気円入出立休先生学校）のみ使用し、それ以外は全てひらがな` : `${gradeNum - 1}年生までに習う配当漢字（累積）のみ使用し、それ以外は全てひらがな。${gradeNum === 2 ? '例：「本→ほん」「読む→よむ」「書く→かく」「語→ご」（2年生配当）はひらがな' : gradeNum === 3 ? '例：「物語→ものがたり」「主人公→しゅじんこう」「場面→ばめん」「感動→かんどう」（3年生以降の配当）はひらがな' : gradeNum === 4 ? '例：「場面」「主人公」（3年生配当）は使用可。「感動→かんどう」「想像→そうぞう」（4年生配当）はひらがな' : gradeNum === 5 ? '例：「感動」「想像」（4年生配当）は使用可。「感謝→かんしゃ」「経験→けいけん」「複雑→ふくざつ」（5年生配当）はひらがな' : '例：「感謝」「経験」（5年生配当）は使用可。「責任→せきにん」「存在→そんざい」「演じる→えんじる」（6年生配当）はひらがな'}`}
 - 子ども自身が書いたような自然な文体で
 - 各ブロック5〜8文程度で、内容を充実させる
-- 各ブロックで「なぜそう思ったのか」「なぜそう感じたのか」という理由も必ず書く（例：「なぜなら〜だからです」「その理由は〜です」など）
+- 各ブロックで「なぜそう思ったのか」「なぜそう感じたのか」という理由も必ず書く
 - 書き出しは「この本を選んだ理由」と「読んでみた感想・印象」を使う。あらすじは「主人公のタイプ」と「一番頑張っていたこと」を使う。心に残った場面は「その場面の気持ち」と「心に残った理由」を使う。まとめは「主人公の印象的な行動」と「これからしたいこと」を使う
+- 【語彙ブーストルール・重要】以下のリストから学年に合った言葉を自然な文脈で2〜3箇所使い、その言葉だけを ★word★ で囲むこと（例：「★胸がギューッとなった★」）。囲むのは語彙ブーストの言葉だけ。
+  語彙リスト: ${vocabList}
 
 必ず以下のJSON形式だけで返してください（他のテキスト不要）:
 {
@@ -1803,15 +1881,15 @@ async function generateResult() {
   }
 }
 
-// 結果ブロックを1つ読む（keyで指定）
+// 結果ブロックを1つ読む（keyで指定）★マーカーを除去してから読み上げ
 function speakBlock(key) {
   if (!resultData) return;
-  speakBlocks([resultData[key] || '']);
+  speakBlocks([(resultData[key] || '').replace(/★/g, '')]);
 }
 // 結果ブロックを全部読む
 function speakAllBlocks() {
   if (!resultData) return;
-  speakBlocks(['block1','block2','block3','block4'].map(k => resultData[k] || ''));
+  speakBlocks(['block1','block2','block3','block4'].map(k => (resultData[k] || '').replace(/★/g, '')));
 }
 
 // 複数テキストを順番に読み上げ（結果ブロック用）
@@ -1940,6 +2018,8 @@ function showFullDraft() {
   section.style.display = 'block';
   const btn = document.querySelector('.btn-show-draft');
   if (btn) btn.style.display = 'none';
+  // フクロウ推薦語（★word★）を先に処理、その後タップ置換ヒントを適用
+  document.querySelectorAll('.section-content').forEach(applyOwlMarkers);
   applyVocabHints();
   setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
 }
@@ -1962,6 +2042,35 @@ function restart() {
   renderStep();
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+/* ===== FEATURE 4: OWL VOCAB TIP FUNCTIONS ===== */
+function applyOwlMarkers(el) {
+  // AI が ★word★ で囲んだ語彙ブースト語をフクロウ解説スパンに変換
+  el.innerHTML = el.innerHTML.replace(/★([^★\n]+)★/g, (_, word) =>
+    `<span class="vocab-owl-word" onclick="showOwlTip(event,this)">${word}</span>`);
+}
+function showOwlTip(event, el) {
+  event.stopPropagation();
+  const word = el.textContent;
+  const cat = gradeCat();
+  const tips = {
+    low:  `「${word}」ってことば、カッコいいだろ！こんなふうに書くと、きもちがビンビン伝わるぞ！`,
+    mid:  `「${word}」は気持ちをうまく表す言葉だよ！感想文で使うと、もっとリアルに伝わるよ！`,
+    high: `「${word}」は感情を豊かに表現できる言葉だよ。感想文で使うと、読む人の心により深く届くよ！`,
+  };
+  const popup = document.getElementById('owlTipPopup');
+  popup.innerHTML = `
+    <div class="vocab-owl-popup-header">${getCharImg('mid')} <span>カッコいい言葉だぞ！⭐</span></div>
+    <div class="vocab-owl-popup-tip">${tips[cat] || tips.mid}</div>`;
+  const rect = el.getBoundingClientRect();
+  popup.style.top  = (rect.bottom + window.scrollY + 8) + 'px';
+  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 312)) + 'px';
+  popup.classList.add('show');
+}
+document.addEventListener('click', () => {
+  const p = document.getElementById('owlTipPopup');
+  if (p) p.classList.remove('show');
+});
 
 /* ===== FEATURE 2: VOCAB BOOST FUNCTIONS ===== */
 function escapeForRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
